@@ -1,0 +1,1021 @@
+{
+  "cursos": [
+    {
+      "titulo": "Inducción HRG",
+      "perfil": "General",
+      "modulos": [
+        {
+          "titulo": "1. Bienvenidos a Transportes Romo (HRG)",
+          "lecciones": [
+            {
+              "titulo": "1.1 Historia y Filosofía",
+              "contenido": "¡Bienvenido a Transportes Romo (HRG)! Somos una empresa orgullosamente mexicana dedicada al autotransporte de carga federal. Durante años hemos movido el motor del país asegurando que cada mercancía llegue a su destino de manera segura, puntual y eficiente. Nuestra Misión es brindar soluciones logísticas de excelencia, mientras que nuestra Visión es ser líderes en el autotransporte nacional reconocidos por nuestra innovación y seguridad. Nuestros valores fundamentales son: Seguridad, Compromiso, Honestidad y Trabajo en Equipo. Al portar nuestro uniforme, te conviertes en la imagen de HRG ante clientes y sociedad."
+            },
+            {
+              "titulo": "1.2 Políticas Generales de Seguridad y Conducta",
+              "contenido": "En HRG operamos bajo una política de 'Cero Tolerancia' al consumo de alcohol y drogas. Es obligatorio cumplir con el reglamento interno de trabajo, el cual se rige bajo la Ley Federal del Trabajo y las normas de la STPS. El uso del gafete de identificación es obligatorio en todas las instalaciones. Asimismo, está estrictamente prohibido el uso de dispositivos móviles mientras se operan vehículos o maquinaria pesada sin un sistema de manos libres. Todos los colaboradores deben reportar cualquier condición insegura a sus supervisores inmediatos."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Cuál es la política de HRG respecto al consumo de alcohol y drogas?",
+          "opciones": [
+            "Tolerancia moderada si no es en horario laboral",
+            "Cero Tolerancia",
+            "Permitido sólo fines de semana"
+          ],
+          "respuesta_correcta": "Cero Tolerancia"
+        },
+        {
+          "pregunta": "¿Cuáles son los valores fundamentales de Transportes Romo?",
+          "opciones": [
+            "Rapidez, Competencia, Riesgo y Fuerza",
+            "Seguridad, Compromiso, Honestidad y Trabajo en Equipo",
+            "Economía, Velocidad, Individualismo y Adaptabilidad"
+          ],
+          "respuesta_correcta": "Seguridad, Compromiso, Honestidad y Trabajo en Equipo"
+        },
+        {
+          "pregunta": "¿Qué ley rige principalmente nuestro reglamento interno?",
+          "opciones": [
+            "Ley General de Salud",
+            "Ley Federal del Trabajo",
+            "Ley del Impuesto sobre la Renta"
+          ],
+          "respuesta_correcta": "Ley Federal del Trabajo"
+        },
+        {
+          "pregunta": "¿Cuál es la regla principal sobre el uso de celulares para operadores y personal operativo?",
+          "opciones": [
+            "Estrictamente prohibido operando vehículos sin manos libres",
+            "Se permite sólo para contestar mensajes de texto",
+            "Se permite en autopistas rectas"
+          ],
+          "respuesta_correcta": "Estrictamente prohibido operando vehículos sin manos libres"
+        },
+        {
+          "pregunta": "¿Qué debes hacer si detectas una condición insegura en el patio o taller?",
+          "opciones": [
+            "Ignorarla si no es de tu área",
+            "Reportarla al supervisor inmediato",
+            "Intentar arreglarla por ti mismo sin equipo"
+          ],
+          "respuesta_correcta": "Reportarla al supervisor inmediato"
+        }
+      ]
+    },
+    {
+      "titulo": "Manejo Defensivo para Operadores",
+      "perfil": "Operadores",
+      "modulos": [
+        {
+          "titulo": "1. Introducción al Manejo Defensivo",
+          "lecciones": [
+            {
+              "titulo": "1.1 El Factor Humano y la Prevención",
+              "contenido": "El manejo defensivo consiste en conducir previendo todas las posibles situaciones de peligro, originadas por actos inseguros de otros conductores, condiciones adversas o fallas mecánicas. El factor humano es responsable del 80% de los accidentes de tránsito. Un operador defensivo cede el paso, no compite, mantiene la calma ante provocaciones y asume que los demás conductores pueden cometer errores. Recuerda el principio: 'Evitar el accidente a pesar de las acciones incorrectas de otros o de las condiciones adversas'."
+            },
+            {
+              "titulo": "1.2 Gestión del Espacio y Puntos Ciegos",
+              "contenido": "Un tractocamión con semirremolque tiene puntos ciegos críticos (No-Zones): directamente detrás del remolque, a los lados (especialmente el lado derecho) y justo frente al cofre. Es vital revisar los espejos cada 5 a 8 segundos. Además, debes aplicar la regla de los 4 segundos para mantener una distancia de seguimiento segura en condiciones óptimas, y aumentar 1 segundo adicional por cada condición adversa (lluvia, niebla, noche, carga pesada)."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Cuál es el principio básico del Manejo Defensivo?",
+          "opciones": [
+            "Llegar rápido al destino",
+            "Evitar el accidente a pesar de los errores de otros o condiciones adversas",
+            "Tener siempre el derecho de paso"
+          ],
+          "respuesta_correcta": "Evitar el accidente a pesar de los errores de otros o condiciones adversas"
+        },
+        {
+          "pregunta": "¿Qué porcentaje de accidentes viales es atribuido al factor humano?",
+          "opciones": [
+            "80%",
+            "40%",
+            "10%"
+          ],
+          "respuesta_correcta": "80%"
+        },
+        {
+          "pregunta": "¿Cuál es la zona ciega (No-Zone) más peligrosa en un tractocamión?",
+          "opciones": [
+            "El techo de la cabina",
+            "El lado derecho, la parte trasera y el frente del cofre",
+            "Las llantas direccionales"
+          ],
+          "respuesta_correcta": "El lado derecho, la parte trasera y el frente del cofre"
+        },
+        {
+          "pregunta": "¿Con qué frecuencia se deben revisar los espejos laterales mientras se conduce?",
+          "opciones": [
+            "Cada 5 a 8 segundos",
+            "Cada minuto",
+            "Solo al cambiar de carril"
+          ],
+          "respuesta_correcta": "Cada 5 a 8 segundos"
+        },
+        {
+          "pregunta": "En condiciones de lluvia, ¿qué debes hacer con tu distancia de seguimiento?",
+          "opciones": [
+            "Mantenerla igual",
+            "Reducirla para que otros no se metan",
+            "Aumentar al menos 1 segundo adicional a tu regla base"
+          ],
+          "respuesta_correcta": "Aumentar al menos 1 segundo adicional a tu regla base"
+        }
+      ]
+    },
+    {
+      "titulo": "Tiempos de Conducción, Pausas y Fatiga",
+      "perfil": "Operadores",
+      "modulos": [
+        {
+          "titulo": "1. Regulación NOM-087-SCT y Salud",
+          "lecciones": [
+            {
+              "titulo": "1.1 Disposiciones de la NOM-087-SCT-2-2017",
+              "contenido": "La NOM-087 regula los tiempos de conducción y pausas para conductores de los servicios de autotransporte federal. Obliga a todo operador a llevar una Bitácora de Horas de Servicio, física o electrónica. La norma establece que por cada 5 horas de conducción continua o fracción, debes realizar una pausa de al menos 30 minutos. El tiempo máximo de conducción en 24 horas es de 14 horas, tras las cuales debes tener un descanso ininterrumpido no menor a 8 horas."
+            },
+            {
+              "titulo": "1.2 Reconocimiento y Manejo de la Fatiga",
+              "contenido": "La fatiga es un asesino silencioso en carretera. Los microsueños (dormitar por 2 o 3 segundos) a 80 km/h equivalen a recorrer más de 60 metros con los ojos cerrados. Los síntomas incluyen: bostezos frecuentes, dificultad para mantener los ojos abiertos, parpadeo lento, y no recordar los últimos kilómetros recorridos. La cafeína o bebidas energéticas no sustituyen el sueño real; solo enmascaran el cansancio temporalmente. Si sientes fatiga extrema, avisa a monitoreo y detén la unidad en un parador seguro."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Qué regula la NOM-087-SCT-2-2017?",
+          "opciones": [
+            "Pesos y dimensiones de los vehículos",
+            "Tiempos de conducción y pausas para conductores",
+            "Emisiones contaminantes"
+          ],
+          "respuesta_correcta": "Tiempos de conducción y pausas para conductores"
+        },
+        {
+          "pregunta": "Según la NOM-087, ¿cuál es el tiempo de pausa obligatorio tras 5 horas de conducción?",
+          "opciones": [
+            "10 minutos",
+            "30 minutos",
+            "1 hora"
+          ],
+          "respuesta_correcta": "30 minutos"
+        },
+        {
+          "pregunta": "¿Cuál es el tiempo máximo de conducción permitido en un periodo de 24 horas?",
+          "opciones": [
+            "12 horas",
+            "14 horas",
+            "16 horas"
+          ],
+          "respuesta_correcta": "14 horas"
+        },
+        {
+          "pregunta": "Después del tiempo máximo de conducción diaria, ¿cuánto tiempo de descanso ininterrumpido se exige?",
+          "opciones": [
+            "6 horas",
+            "8 horas",
+            "10 horas"
+          ],
+          "respuesta_correcta": "8 horas"
+        },
+        {
+          "pregunta": "¿Qué son los microsueños?",
+          "opciones": [
+            "Sueños reparadores de 1 hora",
+            "Episodios de pérdida de conciencia de 2 a 3 segundos",
+            "Técnicas de meditación"
+          ],
+          "respuesta_correcta": "Episodios de pérdida de conciencia de 2 a 3 segundos"
+        }
+      ]
+    },
+    {
+      "titulo": "Inspección Preoperativa del Tractocamión",
+      "perfil": "Operadores",
+      "modulos": [
+        {
+          "titulo": "1. Revisión de Seguridad (NOM-068-SCT)",
+          "lecciones": [
+            {
+              "titulo": "1.1 Círculo de Seguridad y Exterior",
+              "contenido": "Antes de iniciar un viaje, es mandatorio realizar el 'Círculo de Seguridad', un recorrido de 360 grados alrededor de la unidad y el remolque. Inspecciona la profundidad del piso de las llantas (mínimo 3 mm en direccionales y 1.5 mm en tracción/remolque según NOM-068). Revisa la presión de inflado, asegúrate de que no haya birlos flojos ni escurrimientos de líquidos debajo del motor. Verifica el correcto acoplamiento de la quinta rueda, las mangueras de aire (glad hands) y el seguro de las muelas."
+            },
+            {
+              "titulo": "1.2 Revisión en Cabina y Sistema de Frenos",
+              "contenido": "Dentro de la cabina, verifica el correcto funcionamiento del panel de instrumentos, nivel de combustible y presión de aire de los tanques (debe cortar el compresor alrededor de los 120 psi). Realiza la prueba de fugas de aire: con el motor apagado, frenos de estacionamiento liberados y pisando el freno de servicio, no debes perder más de 4 psi por minuto en una combinación tracto-remolque. Prueba también el claxon, limpiaparabrisas y que tus espejos estén limpios y ajustados."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Cuál es la profundidad mínima permitida para las llantas direccionales según la NOM-068?",
+          "opciones": [
+            "1.5 mm",
+            "3.0 mm",
+            "5.0 mm"
+          ],
+          "respuesta_correcta": "3.0 mm"
+        },
+        {
+          "pregunta": "¿Qué es el 'Círculo de Seguridad'?",
+          "opciones": [
+            "Un recorrido de 360 grados inspeccionando el exterior de la unidad antes del viaje",
+            "Una zona de descanso en la carretera",
+            "Un tipo de candado para la quinta rueda"
+          ],
+          "respuesta_correcta": "Un recorrido de 360 grados inspeccionando el exterior de la unidad antes del viaje"
+        },
+        {
+          "pregunta": "En un sistema de frenos de aire normal, ¿a qué presión aproximada debe cortar el compresor?",
+          "opciones": [
+            "60 psi",
+            "90 psi",
+            "120 psi"
+          ],
+          "respuesta_correcta": "120 psi"
+        },
+        {
+          "pregunta": "Durante la prueba de fugas de aire (frenos aplicados, motor apagado), la pérdida máxima en combinación tracto-remolque es:",
+          "opciones": [
+            "2 psi por minuto",
+            "4 psi por minuto",
+            "10 psi por minuto"
+          ],
+          "respuesta_correcta": "4 psi por minuto"
+        },
+        {
+          "pregunta": "¿Qué elemento es crucial revisar al conectar el remolque?",
+          "opciones": [
+            "Color del remolque",
+            "Acoplamiento correcto de muelas en la quinta rueda y líneas de aire",
+            "La presión de la llanta de refacción de otro camión"
+          ],
+          "respuesta_correcta": "Acoplamiento correcto de muelas en la quinta rueda y líneas de aire"
+        }
+      ]
+    },
+    {
+      "titulo": "Protocolo de Accidentes y Emergencias",
+      "perfil": "General/Operadores",
+      "modulos": [
+        {
+          "titulo": "1. Actuación ante Siniestros",
+          "lecciones": [
+            {
+              "titulo": "1.1 Abanderamiento y Protección de la Escena",
+              "contenido": "Al ocurrir un accidente o falla mecánica, la prioridad es no agravar la situación (evitar accidentes secundarios). Enciende de inmediato tus luces intermitentes de peligro. Coloca los triángulos de seguridad: en carreteras de un solo sentido a 30, 60 y 90 metros hacia atrás; en doble sentido a 30 y 60 metros atrás, y uno a 30 metros por delante. Usa tu chaleco reflejante al descender de la cabina. No intentes mover heridos graves a menos que haya riesgo inminente de incendio o explosión."
+            },
+            {
+              "titulo": "1.2 Reporte de Autoridades y Base HRG",
+              "contenido": "Una vez asegurada la escena, comunícate de inmediato con el centro de Monitoreo de HRG para que activen los protocolos internos y reporten a la aseguradora. Si hay heridos, llama al 911 solicitando servicios médicos y la presencia de la Guardia Nacional (División Carreteras). Toma fotografías desde un lugar seguro, no aceptes responsabilidad, no llegues a acuerdos no autorizados y espera siempre al ajustador del seguro."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Cuál es la acción inmediata al tener un accidente o falla en ruta?",
+          "opciones": [
+            "Salir corriendo",
+            "Encender luces de peligro y colocar señalamientos (triángulos) usando chaleco reflejante",
+            "Llamar a un mecánico antes de señalizar"
+          ],
+          "respuesta_correcta": "Encender luces de peligro y colocar señalamientos (triángulos) usando chaleco reflejante"
+        },
+        {
+          "pregunta": "En una carretera de doble sentido, ¿dónde se deben colocar los triángulos de seguridad?",
+          "opciones": [
+            "Solo detrás de la unidad",
+            "Atrás y adelante de la unidad para advertir ambos sentidos",
+            "Encima de la caja del remolque"
+          ],
+          "respuesta_correcta": "Atrás y adelante de la unidad para advertir ambos sentidos"
+        },
+        {
+          "pregunta": "¿En qué caso está justificado mover a un herido grave de un vehículo accidentado?",
+          "opciones": [
+            "Siempre hay que moverlos",
+            "Cuando el herido lo pida por comodidad",
+            "Solo cuando exista riesgo inminente de incendio o explosión"
+          ],
+          "respuesta_correcta": "Solo cuando exista riesgo inminente de incendio o explosión"
+        },
+        {
+          "pregunta": "¿A quién debes reportar el incidente inmediatamente después de asegurar la escena?",
+          "opciones": [
+            "A tu familia en redes sociales",
+            "A la base/Monitoreo HRG y emergencias (911)",
+            "A otros operadores por radio CB"
+          ],
+          "respuesta_correcta": "A la base/Monitoreo HRG y emergencias (911)"
+        },
+        {
+          "pregunta": "¿Qué postura debes tomar ante los involucrados antes de que llegue el ajustador del seguro?",
+          "opciones": [
+            "No aceptar responsabilidad y no hacer tratos extraoficiales",
+            "Ofrecer dinero en efectivo",
+            "Firmar documentos que eximan al otro"
+          ],
+          "respuesta_correcta": "No aceptar responsabilidad y no hacer tratos extraoficiales"
+        }
+      ]
+    },
+    {
+      "titulo": "Seguridad en Taller para Mecánicos",
+      "perfil": "Mecánicos",
+      "modulos": [
+        {
+          "titulo": "1. Prevención de Riesgos y LOTO",
+          "lecciones": [
+            {
+              "titulo": "1.1 Equipo de Protección Personal (NOM-017-STPS) y Manejo de Cargas (NOM-006)",
+              "contenido": "El taller es una de las áreas con mayor riesgo de accidentes. El uso del EPP es obligatorio: botas de seguridad con casquillo (dieléctricas si manejas sistema eléctrico), lentes de seguridad, guantes anticorte o de nitrilo según la tarea, y tapones auditivos cuando hay ruido excesivo (pistolas neumáticas). Para el manejo manual de cargas, la NOM-006-STPS indica que la carga máxima para hombres es de 25 kg. Para componentes de tractocamiones (tambores de freno, transmisiones), SIEMPRE usa equipo de izaje (grúas, patines, polipastos)."
+            },
+            {
+              "titulo": "1.2 Bloqueo y Etiquetado de Energías Peligrosas (LOTO)",
+              "contenido": "El protocolo LOTO (Lock Out, Tag Out) salva vidas. Antes de intervenir cualquier sistema mecánico, eléctrico o neumático, la energía debe ser aislada y drenada. Si vas a trabajar debajo de la unidad, coloca calzas en las llantas, usa torres o soportes de gato (nunca confíes solo en el gato hidráulico), drena el aire de los tanques si intervienes frenos, y desconecta las baterías y coloca una etiqueta y candado para evitar que otro compañero encienda el motor por error."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "Según la NOM-006-STPS, ¿cuál es el peso máximo que debe cargar manualmente un hombre?",
+          "opciones": [
+            "25 kg",
+            "50 kg",
+            "75 kg"
+          ],
+          "respuesta_correcta": "25 kg"
+        },
+        {
+          "pregunta": "¿Qué significa el procedimiento LOTO en el taller?",
+          "opciones": [
+            "Limpieza, Orden, Trabajo y Organización",
+            "Lock Out, Tag Out (Bloqueo y Etiquetado de energías)",
+            "Ley Orgánica de Talleres Operativos"
+          ],
+          "respuesta_correcta": "Lock Out, Tag Out (Bloqueo y Etiquetado de energías)"
+        },
+        {
+          "pregunta": "¿Qué equipo de apoyo debes usar siempre que trabajes debajo del tractocamión?",
+          "opciones": [
+            "Solo el gato hidráulico",
+            "Calzas en las llantas y torres o soportes fijos",
+            "Madera improvisada"
+          ],
+          "respuesta_correcta": "Calzas en las llantas y torres o soportes fijos"
+        },
+        {
+          "pregunta": "¿Qué tipo de calzado es obligatorio dentro del taller?",
+          "opciones": [
+            "Tenis deportivos",
+            "Zapatos de vestir",
+            "Botas de seguridad con casquillo"
+          ],
+          "respuesta_correcta": "Botas de seguridad con casquillo"
+        },
+        {
+          "pregunta": "Al intervenir el sistema eléctrico de la unidad, el primer paso de seguridad es:",
+          "opciones": [
+            "Cortar los cables",
+            "Desconectar las baterías",
+            "Encender las luces"
+          ],
+          "respuesta_correcta": "Desconectar las baterías"
+        }
+      ]
+    },
+    {
+      "titulo": "Operación y Protocolos para Monitoristas",
+      "perfil": "Monitoristas",
+      "modulos": [
+        {
+          "titulo": "1. Rastreo Satelital y Manejo de Crisis",
+          "lecciones": [
+            {
+              "titulo": "1.1 Uso Eficiente de GPS y Telemetría",
+              "contenido": "El Monitorista de HRG es responsable de velar por la seguridad de la unidad, el operador y la carga. Utilizarás la plataforma de rastreo para vigilar que las unidades no se desvíen del corredor autorizado ni excedan los límites de velocidad configurados (generalmente 80 km/h). Las geocercas están diseñadas para alertar ingresos y salidas de clientes, y zonas de alto riesgo. Debes prestar atención inmediata a alertas de Jammer (inhibidor de señal), desconexión de batería y botones de pánico."
+            },
+            {
+              "titulo": "1.2 Protocolo Anti-Robo, Desvíos y Emergencias",
+              "contenido": "Ante un desvío no autorizado de ruta, la primera acción es intentar contactar al operador. Si no hay respuesta tras 3 minutos o se detecta un Jammer, se debe ejecutar paro de motor de inmediato (si la plataforma y las condiciones de seguridad vial lo permiten) y reportar al 911 / C5 o Guardia Nacional, brindando las últimas coordenadas, placas y número económico. En paralelo, se notifica a la Gerencia de Operaciones de HRG para desplegar a los cuerpos de recuperación privados si aplica."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Cuál es la función principal de una geocerca en el sistema de rastreo?",
+          "opciones": [
+            "Medir el combustible",
+            "Crear perímetros virtuales para alertar sobre entradas y salidas de zonas específicas",
+            "Comunicarse por voz con el operador"
+          ],
+          "respuesta_correcta": "Crear perímetros virtuales para alertar sobre entradas y salidas de zonas específicas"
+        },
+        {
+          "pregunta": "¿Qué es un Jammer?",
+          "opciones": [
+            "Un inhibidor de señal satelital o celular utilizado por la delincuencia",
+            "Una herramienta para mejorar la señal",
+            "Un tipo de freno de motor"
+          ],
+          "respuesta_correcta": "Un inhibidor de señal satelital o celular utilizado por la delincuencia"
+        },
+        {
+          "pregunta": "¿Qué acción inmediata se debe tomar si se detecta un Jammer y desvío de ruta?",
+          "opciones": [
+            "Esperar 1 hora a que vuelva la señal",
+            "Intentar contacto, ejecutar paro de motor si aplica, y alertar a Guardia Nacional / C5",
+            "Desconectar el sistema de monitoreo"
+          ],
+          "respuesta_correcta": "Intentar contacto, ejecutar paro de motor si aplica, y alertar a Guardia Nacional / C5"
+        },
+        {
+          "pregunta": "¿Cuál es la velocidad máxima de crucero generalmente vigilada por la empresa en autopista?",
+          "opciones": [
+            "80 km/h",
+            "110 km/h",
+            "60 km/h"
+          ],
+          "respuesta_correcta": "80 km/h"
+        },
+        {
+          "pregunta": "Si un operador presiona el Botón de Pánico, el monitorista debe:",
+          "opciones": [
+            "Llamarle para preguntarle si fue un error sin tomar precauciones",
+            "Tratarlo como emergencia real confirmando por protocolo seguro y actuar en consecuencia",
+            "Ignorarlo, frecuentemente lo presionan por error"
+          ],
+          "respuesta_correcta": "Tratarlo como emergencia real confirmando por protocolo seguro y actuar en consecuencia"
+        }
+      ]
+    },
+    {
+      "titulo": "NOM-012-SCT Pesos y Dimensiones",
+      "perfil": "Operadores",
+      "modulos": [
+        {
+          "titulo": "1. Límites de Peso y Configuraciones Vehiculares",
+          "lecciones": [
+            {
+              "titulo": "1.1 Configuraciones Vehiculares",
+              "contenido": "La NOM-012-SCT establece las clasificaciones de los vehículos para circular en vías federales. Conocer la nomenclatura es esencial: por ejemplo, una configuración T3-S2 indica un tractocamión de 3 ejes acoplado a un semirremolque de 2 ejes. Las dimensiones máximas permitidas para cualquier vehículo son 2.60 metros de ancho y 4.25 metros de altura. La correcta identificación de tu unidad te previene de multas y te garantiza circular solo por caminos autorizados (ET, A, B, C, D)."
+            },
+            {
+              "titulo": "1.2 Límites de Peso y Responsabilidades",
+              "contenido": "El Peso Bruto Vehicular (PBV) es la suma del peso del vehículo más la carga útil. Cada configuración tiene un PBV máximo establecido. Si requieres exceder estos límites para carga indivisible, se requiere un permiso especial de la SICT. Es importante recordar que en temas de exceso de peso, el expedidor de la carga y el transportista son responsables solidarios. Mantén siempre una distancia mínima de seguridad de 100 metros con otros vehículos pesados, especialmente si es doblemente articulado."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Qué norma regula los pesos y dimensiones del autotransporte en México?",
+          "opciones": [
+            "NOM-012-SCT",
+            "NOM-068-SCT",
+            "NOM-087-SCT"
+          ],
+          "respuesta_correcta": "NOM-012-SCT"
+        },
+        {
+          "pregunta": "¿Qué significa la configuración T3-S2?",
+          "opciones": [
+            "Tracto de 3 ejes y semirremolque de 2 ejes",
+            "Tractocamión de 2 ejes y remolque de 3",
+            "Camión unitario de 5 ejes"
+          ],
+          "respuesta_correcta": "Tracto de 3 ejes y semirremolque de 2 ejes"
+        },
+        {
+          "pregunta": "¿Cuál es el ancho máximo permitido para cualquier vehículo según la norma?",
+          "opciones": [
+            "2.60 metros",
+            "2.50 metros",
+            "3.00 metros"
+          ],
+          "respuesta_correcta": "2.60 metros"
+        },
+        {
+          "pregunta": "¿Cuál es la altura máxima permitida en caminos de altas especificaciones?",
+          "opciones": [
+            "4.00 metros",
+            "4.25 metros",
+            "4.50 metros"
+          ],
+          "respuesta_correcta": "4.25 metros"
+        },
+        {
+          "pregunta": "¿Cuál es la velocidad máxima permitida para tractocamiones doblemente articulados (fulles)?",
+          "opciones": [
+            "90 km/h",
+            "80 km/h",
+            "100 km/h"
+          ],
+          "respuesta_correcta": "80 km/h"
+        },
+        {
+          "pregunta": "¿Qué permiso se requiere para transportar carga indivisible que excede límites?",
+          "opciones": [
+            "Permiso municipal",
+            "Ninguno",
+            "Permiso especial de la SICT"
+          ],
+          "respuesta_correcta": "Permiso especial de la SICT"
+        },
+        {
+          "pregunta": "¿Qué significa el Peso Bruto Vehicular (PBV)?",
+          "opciones": [
+            "El peso solo del tractocamión",
+            "El peso de la carga",
+            "La suma del peso del vehículo vacío y la carga útil"
+          ],
+          "respuesta_correcta": "La suma del peso del vehículo vacío y la carga útil"
+        },
+        {
+          "pregunta": "En caso de una multa por exceso de peso, ¿quiénes son los responsables solidarios?",
+          "opciones": [
+            "Solo el operador",
+            "El expedidor de la carga y el transportista",
+            "El fabricante del remolque"
+          ],
+          "respuesta_correcta": "El expedidor de la carga y el transportista"
+        },
+        {
+          "pregunta": "¿Cuál es la distancia mínima de separación que debe mantenerse con otros vehículos pesados?",
+          "opciones": [
+            "50 metros",
+            "100 metros",
+            "10 metros"
+          ],
+          "respuesta_correcta": "100 metros"
+        },
+        {
+          "pregunta": "¿Qué tipo de caminos son considerados de altas especificaciones para tránsito máximo?",
+          "opciones": [
+            "Caminos vecinales",
+            "Caminos tipo C y D",
+            "Caminos ET y A"
+          ],
+          "respuesta_correcta": "Caminos ET y A"
+        }
+      ]
+    },
+    {
+      "titulo": "Manejo de Materiales Peligrosos",
+      "perfil": "Operadores",
+      "modulos": [
+        {
+          "titulo": "1. Clasificación y Respuesta a Emergencias",
+          "lecciones": [
+            {
+              "titulo": "1.1 Clasificación y Etiquetado (NOM-002)",
+              "contenido": "La NOM-002-SCT clasifica los materiales peligrosos en 9 clases de riesgo (ej. Clase 3: Líquidos inflamables). Todo operador de material peligroso debe portar una Licencia Especial Tipo E, y el vehículo debe contar con carteles en forma de rombo en sus cuatro lados identificando la sustancia transportada. El rombo NFPA 704 se utiliza para instalaciones fijas, en el transporte aplicamos los lineamientos y numeración ONU."
+            },
+            {
+              "titulo": "1.2 Uso de la Guía de Respuesta a Emergencias (GRE)",
+              "contenido": "El documento de embarque debe describir el nombre y número ONU de la sustancia. En caso de derrame, incendio o accidente, debes consultar inmediatamente la Guía de Respuesta a Emergencias (GRE). Aléjate del área (siempre a favor del viento) y notifica a las autoridades (911) proporcionando la información de la carga. Nunca intentes limpiar o contener un derrame de materiales peligrosos si no cuentas con el equipo de protección indicado en las hojas de seguridad."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Qué norma clasifica las sustancias peligrosas en el autotransporte?",
+          "opciones": [
+            "NOM-012-SCT",
+            "NOM-002-SCT",
+            "NOM-087-SCT"
+          ],
+          "respuesta_correcta": "NOM-002-SCT"
+        },
+        {
+          "pregunta": "¿Cuántas clases principales de riesgo existen para materiales peligrosos?",
+          "opciones": [
+            "3 clases",
+            "5 clases",
+            "9 clases"
+          ],
+          "respuesta_correcta": "9 clases"
+        },
+        {
+          "pregunta": "¿Qué tipo de licencia federal autoriza el transporte de materiales y residuos peligrosos?",
+          "opciones": [
+            "Licencia Tipo B",
+            "Licencia Tipo E",
+            "Licencia Tipo A"
+          ],
+          "respuesta_correcta": "Licencia Tipo E"
+        },
+        {
+          "pregunta": "¿Dónde deben ir colocados los carteles de identificación de riesgo (rombos)?",
+          "opciones": [
+            "Solo en la parte de atrás",
+            "En los 4 lados de la unidad de carga",
+            "En las puertas del tractocamión"
+          ],
+          "respuesta_correcta": "En los 4 lados de la unidad de carga"
+        },
+        {
+          "pregunta": "La Clase 3 de riesgos corresponde a:",
+          "opciones": [
+            "Líquidos inflamables",
+            "Gases",
+            "Sustancias tóxicas"
+          ],
+          "respuesta_correcta": "Líquidos inflamables"
+        },
+        {
+          "pregunta": "¿Qué es la GRE?",
+          "opciones": [
+            "Guía de Rutas Estatales",
+            "Guía de Respuesta a Emergencias",
+            "Gestión de Rastreo Empresarial"
+          ],
+          "respuesta_correcta": "Guía de Respuesta a Emergencias"
+        },
+        {
+          "pregunta": "¿Cuál es la principal diferencia entre el rombo NFPA 704 y los carteles de transporte DOT/ONU?",
+          "opciones": [
+            "Ninguna",
+            "El NFPA es para instalaciones fijas y el ONU para transporte",
+            "El NFPA es para México y el ONU para EUA"
+          ],
+          "respuesta_correcta": "El NFPA es para instalaciones fijas y el ONU para transporte"
+        },
+        {
+          "pregunta": "En caso de un derrame, ¿hacia dónde debes ubicarte para protegerte?",
+          "opciones": [
+            "Cerca para ver mejor",
+            "En contra del viento",
+            "A favor del viento (viento a tu espalda) y en un lugar alto si es posible"
+          ],
+          "respuesta_correcta": "A favor del viento (viento a tu espalda) y en un lugar alto si es posible"
+        },
+        {
+          "pregunta": "¿Qué documento es absolutamente obligatorio para amparar el material peligroso transportado?",
+          "opciones": [
+            "Factura del tractocamión",
+            "Documento de Embarque con número ONU y descripción",
+            "Recibo de peaje"
+          ],
+          "respuesta_correcta": "Documento de Embarque con número ONU y descripción"
+        },
+        {
+          "pregunta": "¿Qué debes hacer si hay un derrame y no tienes el equipo especializado?",
+          "opciones": [
+            "Limpiarlo con tierra",
+            "Alejarse y contactar autoridades usando la guía GRE",
+            "Lavar con manguera de agua"
+          ],
+          "respuesta_correcta": "Alejarse y contactar autoridades usando la guía GRE"
+        }
+      ]
+    },
+    {
+      "titulo": "Primeros Auxilios y RCP Básicos",
+      "perfil": "General",
+      "modulos": [
+        {
+          "titulo": "1. Actuación en Caso de Emergencia Médica",
+          "lecciones": [
+            {
+              "titulo": "1.1 Evaluación Inicial (El ABC)",
+              "contenido": "Ante cualquier accidente o problema médico, la regla número uno es 'Asegurar la escena'. Nunca te conviertas en otra víctima. Después, procede con la evaluación primaria (ABC): Airway (Vía aérea abierta), Breathing (Respiración adecuada) y Circulation (Circulación/Hemorragias). El botiquín de primeros auxilios de la unidad debe usarse para lesiones menores; si es grave, tu prioridad absoluta es llamar al 911."
+            },
+            {
+              "titulo": "1.2 RCP, Hemorragias y Obstrucciones",
+              "contenido": "Ante una hemorragia severa, aplica presión directa sobre la herida con un paño limpio; no retires el paño si se empapa, pon uno nuevo encima. Si la persona no respira y no tiene pulso, se requiere Reanimación Cardiopulmonar (RCP) (compresiones fuertes y rápidas en el centro del pecho). Si una persona se está atragantando (obstrucción de vía aérea), se debe aplicar la Maniobra de Heimlich. En caso de sospecha de fractura, nunca intentes acomodar el hueso."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Cuál es el primer paso indispensable ante cualquier emergencia médica?",
+          "opciones": [
+            "Correr a ayudar",
+            "Asegurar la escena para no ser una víctima más",
+            "Llamar al jefe inmediato"
+          ],
+          "respuesta_correcta": "Asegurar la escena para no ser una víctima más"
+        },
+        {
+          "pregunta": "¿Qué significa el ABC en primeros auxilios?",
+          "opciones": [
+            "Ambulancia, Bomberos, Cruz Roja",
+            "Vía Aérea, Respiración, Circulación",
+            "Accidente, Búsqueda, Curación"
+          ],
+          "respuesta_correcta": "Vía Aérea, Respiración, Circulación"
+        },
+        {
+          "pregunta": "¿A qué número de emergencia nacional debes llamar en México?",
+          "opciones": [
+            "066",
+            "911",
+            "089"
+          ],
+          "respuesta_correcta": "911"
+        },
+        {
+          "pregunta": "¿Cómo debes actuar frente a una hemorragia severa?",
+          "opciones": [
+            "Dejar que sangre para que limpie la herida",
+            "Hacer torniquete inmediato",
+            "Aplicar presión directa sobre la herida con paños limpios"
+          ],
+          "respuesta_correcta": "Aplicar presión directa sobre la herida con paños limpios"
+        },
+        {
+          "pregunta": "¿Qué significa RCP?",
+          "opciones": [
+            "Respuesta y Cuidado Pronto",
+            "Reanimación Cardiopulmonar",
+            "Rescate de Conductores Pesados"
+          ],
+          "respuesta_correcta": "Reanimación Cardiopulmonar"
+        },
+        {
+          "pregunta": "¿Qué maniobra se utiliza en caso de atragantamiento total?",
+          "opciones": [
+            "Maniobra de Heimlich",
+            "Dar palmadas suaves en el rostro",
+            "Soplar en los ojos"
+          ],
+          "respuesta_correcta": "Maniobra de Heimlich"
+        },
+        {
+          "pregunta": "Ante una sospecha de fractura en una pierna tras un accidente, debes:",
+          "opciones": [
+            "Enderezar la pierna con fuerza",
+            "Inmovilizar si es posible y no intentar acomodar el hueso",
+            "Hacer que la persona camine"
+          ],
+          "respuesta_correcta": "Inmovilizar si es posible y no intentar acomodar el hueso"
+        },
+        {
+          "pregunta": "¿Qué debes hacer si hay una quemadura leve por fricción o calor?",
+          "opciones": [
+            "Ponerle pasta de dientes",
+            "Aplicar aceite de motor",
+            "Enfriar la zona con agua limpia abundante"
+          ],
+          "respuesta_correcta": "Enfriar la zona con agua limpia abundante"
+        },
+        {
+          "pregunta": "Es un síntoma común que puede indicar un ataque cardíaco:",
+          "opciones": [
+            "Dolor intenso en el pecho que se irradia al brazo izquierdo o mandíbula",
+            "Hambre excesiva",
+            "Dolor en la rodilla"
+          ],
+          "respuesta_correcta": "Dolor intenso en el pecho que se irradia al brazo izquierdo o mandíbula"
+        },
+        {
+          "pregunta": "¿Para qué sirve el botiquín de la unidad?",
+          "opciones": [
+            "Para realizar cirugías menores",
+            "Para medicar dolores fuertes crónicos",
+            "Para la atención inicial básica de lesiones y cortes menores"
+          ],
+          "respuesta_correcta": "Para la atención inicial básica de lesiones y cortes menores"
+        }
+      ]
+    },
+    {
+      "titulo": "Lucha contra Incendios y Uso de Extintores",
+      "perfil": "General",
+      "modulos": [
+        {
+          "titulo": "1. Prevención y Control de Incendios",
+          "lecciones": [
+            {
+              "titulo": "1.1 La Química del Fuego",
+              "contenido": "El fuego requiere cuatro elementos para existir (Tetraedro del fuego): Calor, Combustible, Oxígeno y una Reacción química en cadena. Los fuegos se clasifican en: Clase A (sólidos comunes como madera, plástico, papel), Clase B (líquidos y gases inflamables como diésel o gasolina) y Clase C (equipos eléctricos energizados). El extintor más común en los vehículos es el de PQS (Polvo Químico Seco), adecuado para fuegos ABC."
+            },
+            {
+              "titulo": "1.2 Uso del Extintor (Técnica PASS)",
+              "contenido": "Para operar un extintor de manera efectiva utiliza la técnica PASS/TIAA: 1) Tirar el seguro o pasador, 2) Apuntar la boquilla a la base del fuego, 3) Apretar el gatillo, y 4) Abanicar de lado a lado. Revisa mensualmente tu extintor asegurando que la aguja del manómetro esté en la zona verde. Si un incendio se sale de control y excede el tamaño de un conato (fuego inicial), evacúa de inmediato y solicita apoyo de los bomberos."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Qué elementos componen el 'Tetraedro del fuego'?",
+          "opciones": [
+            "Luz, Humo, Gas y Calor",
+            "Calor, Combustible, Oxígeno y Reacción en cadena",
+            "Fuego, Aire, Madera y Aceite"
+          ],
+          "respuesta_correcta": "Calor, Combustible, Oxígeno y Reacción en cadena"
+        },
+        {
+          "pregunta": "¿Qué material arde en un fuego Clase A?",
+          "opciones": [
+            "Líquidos inflamables (diésel)",
+            "Sólidos comunes (madera, papel, llantas)",
+            "Equipos eléctricos"
+          ],
+          "respuesta_correcta": "Sólidos comunes (madera, papel, llantas)"
+        },
+        {
+          "pregunta": "Un incendio en los cables de batería energizados del camión es:",
+          "opciones": [
+            "Fuego Clase A",
+            "Fuego Clase B",
+            "Fuego Clase C"
+          ],
+          "respuesta_correcta": "Fuego Clase C"
+        },
+        {
+          "pregunta": "¿Qué tipo de extintor es el más utilizado para el autotransporte (Fuegos ABC)?",
+          "opciones": [
+            "Extintor de Agua",
+            "Polvo Químico Seco (PQS)",
+            "Extintor de CO2"
+          ],
+          "respuesta_correcta": "Polvo Químico Seco (PQS)"
+        },
+        {
+          "pregunta": "¿Qué significa la técnica PASS para usar un extintor?",
+          "opciones": [
+            "Pausar, Apuntar, Soltar, Subir",
+            "Tirar seguro, Apuntar a la base, Apretar, Abanicar",
+            "Pensar, Actuar, Sofocar, Salir"
+          ],
+          "respuesta_correcta": "Tirar seguro, Apuntar a la base, Apretar, Abanicar"
+        },
+        {
+          "pregunta": "Al utilizar el extintor, ¿hacia dónde debe ir dirigido el polvo o agente?",
+          "opciones": [
+            "A las llamas más altas",
+            "A la base del fuego",
+            "Al humo del fuego"
+          ],
+          "respuesta_correcta": "A la base del fuego"
+        },
+        {
+          "pregunta": "En una revisión física del extintor, la aguja del manómetro debe estar en:",
+          "opciones": [
+            "La zona verde (presurizado)",
+            "Cualquier lugar, no importa",
+            "La zona roja (vacío)"
+          ],
+          "respuesta_correcta": "La zona verde (presurizado)"
+        },
+        {
+          "pregunta": "Si un incendio sobrepasa tus capacidades (es mayor a un conato de incendio), debes:",
+          "opciones": [
+            "Intentar apagarlo arrojando tierra",
+            "Evacuar inmediatamente a una distancia segura y llamar a emergencias",
+            "Grabar con el celular cerca del tanque de combustible"
+          ],
+          "respuesta_correcta": "Evacuar inmediatamente a una distancia segura y llamar a emergencias"
+        },
+        {
+          "pregunta": "El diésel quemándose corresponde a un fuego:",
+          "opciones": [
+            "Clase B",
+            "Clase A",
+            "Clase K"
+          ],
+          "respuesta_correcta": "Clase B"
+        },
+        {
+          "pregunta": "¿Qué acción NO se debe hacer con un extintor?",
+          "opciones": [
+            "Sujetarlo firmemente",
+            "Probarlo presionando levemente sin motivo real",
+            "Mantenerlo limpio y accesible"
+          ],
+          "respuesta_correcta": "Probarlo presionando levemente sin motivo real"
+        }
+      ]
+    },
+    {
+      "titulo": "Rendimiento de Combustible y Conducción Técnico-Económica",
+      "perfil": "Operadores",
+      "modulos": [
+        {
+          "titulo": "1. Optimización Operativa",
+          "lecciones": [
+            {
+              "titulo": "1.1 La Zona Dulce del Motor y Hábitos",
+              "contenido": "El factor que más impacta el rendimiento de combustible es el estilo de manejo del operador. Conocer la 'Zona Dulce' (Sweet Spot) de las revoluciones por minuto (RPM) de tu motor es clave, ya que es el rango donde el motor produce la máxima eficiencia con el menor consumo de diésel. El cambio progresivo de marchas y mantener las RPM bajas son estrategias fundamentales. Evita el tiempo en 'ralentí' innecesario (motor encendido sin movimiento), que puede consumir de 2 a 4 litros por hora."
+            },
+            {
+              "titulo": "1.2 Fuerzas de Resistencia y Momentum",
+              "contenido": "La aerodinámica y la resistencia a la rodadura impactan severamente el consumo. Conducir a velocidades excesivas aumenta la resistencia del viento; reducir de 90 km/h a 80 km/h puede ahorrar hasta un 15% de combustible. Llantas desinfladas arrastran el vehículo, exigiendo más potencia. Aprovecha el 'momentum' (inercia), permitiendo que el peso de la unidad trabaje a tu favor en columpios de carretera."
+            }
+          ]
+        }
+      ],
+      "evaluacion": [
+        {
+          "pregunta": "¿Cuál es el factor individual que más influye en el rendimiento de combustible de un tractocamión?",
+          "opciones": [
+            "El tipo de diésel",
+            "El estilo y hábitos de manejo del operador",
+            "La edad del camión"
+          ],
+          "respuesta_correcta": "El estilo y hábitos de manejo del operador"
+        },
+        {
+          "pregunta": "¿Qué es la 'Zona Dulce' (Sweet Spot) del motor?",
+          "opciones": [
+            "El punto donde el motor suena más fuerte",
+            "El rango de RPM donde el motor es más eficiente y económico",
+            "Cuando el camión va de bajada"
+          ],
+          "respuesta_correcta": "El rango de RPM donde el motor es más eficiente y económico"
+        },
+        {
+          "pregunta": "¿Qué significa 'tiempo en ralentí'?",
+          "opciones": [
+            "Cuando el motor está encendido pero la unidad no está en movimiento (ocioso)",
+            "Ir en la marcha más alta en autopista",
+            "Cuando el camión está apagado"
+          ],
+          "respuesta_correcta": "Cuando el motor está encendido pero la unidad no está en movimiento (ocioso)"
+        },
+        {
+          "pregunta": "¿Cuánto combustible aproximado consume un motor de tractocamión pesado en ralentí por hora?",
+          "opciones": [
+            "Medio litro",
+            "De 2 a 4 litros",
+            "Más de 10 litros"
+          ],
+          "respuesta_correcta": "De 2 a 4 litros"
+        },
+        {
+          "pregunta": "¿Cómo impacta la baja presión de aire en las llantas al consumo de combustible?",
+          "opciones": [
+            "Aumenta la resistencia al rodamiento y gasta más diésel",
+            "Mejora el consumo porque agarra mejor",
+            "No tiene ningún impacto"
+          ],
+          "respuesta_correcta": "Aumenta la resistencia al rodamiento y gasta más diésel"
+        },
+        {
+          "pregunta": "¿Cuál es el beneficio del cambio de marchas progresivo?",
+          "opciones": [
+            "Desgasta más rápido el clutch pero ahorra frenos",
+            "Mantiene las RPM bajas optimizando el par motor y ahorrando combustible",
+            "Hace más ruido e impone respeto"
+          ],
+          "respuesta_correcta": "Mantiene las RPM bajas optimizando el par motor y ahorrando combustible"
+        },
+        {
+          "pregunta": "¿Cómo afecta el exceso de velocidad por encima de 80-90 km/h al consumo de combustible?",
+          "opciones": [
+            "Lo disminuye porque se llega más rápido",
+            "Aumenta drásticamente debido a la resistencia aerodinámica",
+            "Se mantiene exactamente igual"
+          ],
+          "respuesta_correcta": "Aumenta drásticamente debido a la resistencia aerodinámica"
+        },
+        {
+          "pregunta": "Aprovechar la inercia (momentum) del peso de la unidad en los relieves de la carretera significa:",
+          "opciones": [
+            "Soltar el volante en las bajadas",
+            "Planificar aceleraciones y desaceleraciones aprovechando subidas y bajadas sin forzar el motor",
+            "Frenar a fondo antes de cada curva"
+          ],
+          "respuesta_correcta": "Planificar aceleraciones y desaceleraciones aprovechando subidas y bajadas sin forzar el motor"
+        },
+        {
+          "pregunta": "La técnica técnico-económica busca:",
+          "opciones": [
+            "Reducir costos de combustible y prolongar la vida útil de los componentes",
+            "Llegar en tiempo récord sin importar el costo",
+            "Evitar las casetas de peaje"
+          ],
+          "respuesta_correcta": "Reducir costos de combustible y prolongar la vida útil de los componentes"
+        },
+        {
+          "pregunta": "¿Qué efecto directo tiene usar el sistema de aire acondicionado a máxima potencia todo el tiempo?",
+          "opciones": [
+            "Enfría el motor",
+            "No cuesta nada extra",
+            "Genera una carga extra al motor incrementando levemente el consumo de diésel"
+          ],
+          "respuesta_correcta": "Genera una carga extra al motor incrementando levemente el consumo de diésel"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
-﻿:root {
+﻿.mobile-only { display: none; }
+:root {
   /* Brand Palette: HRG Red and Black */
   --color-primary: #dc2626; /* HRG Red */
   --color-primary-hover: #b91c1c;
@@ -788,4 +789,5 @@ body {
     background: #fff !important;
   }
 }
+
 

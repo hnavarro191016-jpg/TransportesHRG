@@ -1,10 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Bell, Search, UserCheck, RefreshCw, Moon, Sun, Grid } from 'lucide-react';
+import { Bell, Search, UserCheck, RefreshCw, Moon, Sun, Grid, Menu } from 'lucide-react';
 import { CheckInWidget } from './CheckInWidget';
 
-export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm, activeModule, setActiveModule }) => {
+export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm, activeModule, setActiveModule, isSidebarOpen, setIsSidebarOpen }) => {
   const { activeRole, activeUser, data, resetDemoData, theme, toggleTheme, logout } = useApp();
+
+  // Hide on scroll state
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Find the scrollable container. It is likely the window or page-wrapper
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 60) {
+        setIsHeaderHidden(true);
+      } else if (currentScrollY < lastScrollY) {
+        setIsHeaderHidden(false);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   // Calculate total active alerts count
   const lowStockCount = data.products.filter(p => p.status === 'activo' && p.currentStock > 0 && p.currentStock <= p.minStock).length;
@@ -22,8 +43,18 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
   ];
 
   return (
-    <header className="header-bar">
+    <header className={`header-bar ${isHeaderHidden ? 'header-hidden' : ''}`}>
       <div className="header-brand" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {activeRole !== 'Operador' && activeModule !== 'monitoreo' && (
+          <button 
+            className="mobile-menu-btn"
+            onClick={() => setIsSidebarOpen(true)}
+            title="Abrir Menú"
+            style={{ background: 'var(--bg-card-hover)', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'none', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}
+          >
+            <Menu size={20} />
+          </button>
+        )}
         <button 
           onClick={() => setActiveModule && setActiveModule(null)}
           title="Regresar al Portal Empresarial (Módulos)"
@@ -46,7 +77,7 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
       </div>
 
       {/* Right controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="header-right-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
         
         <CheckInWidget />
 

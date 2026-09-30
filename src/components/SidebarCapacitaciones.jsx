@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { BookOpen, Library, Award, Settings, ChevronRight, BarChart2 } from 'lucide-react';
 
-export const SidebarCapacitaciones = ({ currentView, setCurrentView }) => {
+export const SidebarCapacitaciones = ({ currentView, setCurrentView, setIsSidebarOpen }) => {
   const { activeRole } = useApp();
 
   const getMenuItemClass = (viewName) => {
@@ -23,12 +23,12 @@ export const SidebarCapacitaciones = ({ currentView, setCurrentView }) => {
       <nav className="sidebar-menu">
 
 
-        <button className={getMenuItemClass('mis_capacitaciones')} onClick={() => setCurrentView('mis_capacitaciones')}>
+        <button className={getMenuItemClass('mis_capacitaciones')} onClick={() => { setCurrentView('mis_capacitaciones'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
           <Award size={18} className="sidebar-icon" />
           <span style={{ flex: 1, textAlign: 'left' }}>Mis Capacitaciones</span>
         </button>
 
-        <button className={getMenuItemClass('catalogo')} onClick={() => setCurrentView('catalogo')}>
+        <button className={getMenuItemClass('catalogo')} onClick={() => { setCurrentView('catalogo'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
           <Library size={18} className="sidebar-icon" />
           <span style={{ flex: 1, textAlign: 'left' }}>Catálogo de Cursos</span>
         </button>
@@ -37,11 +37,11 @@ export const SidebarCapacitaciones = ({ currentView, setCurrentView }) => {
           <>
             <div style={{ height: '1px', background: 'var(--color-border-subtle)', margin: '16px 20px' }}></div>
             
-            <button className={getMenuItemClass('admin_cursos')} onClick={() => setCurrentView('admin_cursos')}>
+            <button className={getMenuItemClass('admin_cursos')} onClick={() => { setCurrentView('admin_cursos'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
               <Settings size={18} className="sidebar-icon" />
               <span style={{ flex: 1, textAlign: 'left' }}>Administración</span>
             </button>
-            <button className={getMenuItemClass('dashboard')} onClick={() => setCurrentView('dashboard')}>
+            <button className={getMenuItemClass('dashboard')} onClick={() => { setCurrentView('dashboard'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
               <BarChart2 size={18} className="sidebar-icon" />
               <span style={{ flex: 1, textAlign: 'left' }}>Dashboard General</span>
             </button>

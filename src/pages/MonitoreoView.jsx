@@ -41,6 +41,7 @@ const getTotalDistance = (coords) => {
 
 export const MonitoreoView = () => {
   const [activeView, setActiveView] = useState('menu'); // 'menu', 'live', 'history'
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   const [locations, setLocations] = useState([]);
   const [history, setHistory] = useState({});
@@ -150,7 +151,7 @@ export const MonitoreoView = () => {
   // ==========================================
   if (activeView === 'menu') {
     return (
-      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', height: 'calc(100vh - 80px)' }}>
+      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', height: 'calc(100dvh - 80px)' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px', textAlign: 'center' }}>
           Sistema de Rastreo Satelital
         </h1>
@@ -220,7 +221,7 @@ export const MonitoreoView = () => {
   // ==========================================
   if (activeView === 'live') {
     return (
-      <div style={{ padding: '24px', height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '24px', height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column' }}>
         
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '24px' }}>
           <button 
@@ -236,9 +237,24 @@ export const MonitoreoView = () => {
             <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
             REC Live
           </div>
+
+          <button 
+            onClick={() => setIsFullScreen(true)}
+            style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            Pantalla Completa
+          </button>
         </div>
         
-        <div style={{ flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+          {isFullScreen && (
+            <button 
+              onClick={() => setIsFullScreen(false)}
+              style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            >
+              Salir de Pantalla Completa
+            </button>
+          )}
           <MapContainer 
             center={[23.6345, -102.5528]} 
             zoom={5} 
@@ -273,7 +289,7 @@ export const MonitoreoView = () => {
   // ==========================================
   if (activeView === 'history') {
     return (
-      <div style={{ padding: '24px', height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '24px', height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column' }}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
           
@@ -286,6 +302,13 @@ export const MonitoreoView = () => {
                 <ArrowLeft size={18} /> Volver
               </button>
               <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>Historial de Rutas</h2>
+              
+              <button 
+                onClick={() => setIsFullScreen(true)}
+                style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Pantalla Completa
+              </button>
             </div>
             
             {distances.length > 0 && (
@@ -343,7 +366,15 @@ export const MonitoreoView = () => {
           </div>
         </div>
         
-        <div style={{ flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+          {isFullScreen && (
+            <button 
+              onClick={() => setIsFullScreen(false)}
+              style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            >
+              Salir de Pantalla Completa
+            </button>
+          )}
           <MapContainer 
             center={[23.6345, -102.5528]} 
             zoom={5} 

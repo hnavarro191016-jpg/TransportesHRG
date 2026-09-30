@@ -1,7 +1,7 @@
 import React from 'react';
 import { ClipboardList, Wrench, BarChart3, MessageCirclePlus } from 'lucide-react';
 
-export const SidebarMantenimiento = ({ currentView, setCurrentView }) => {
+export const SidebarMantenimiento = ({ currentView, setCurrentView, setIsSidebarOpen }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard del taller', icon: BarChart3 },
     { id: 'report_incident', label: 'Reportar incidencia', icon: MessageCirclePlus },
@@ -17,7 +17,7 @@ export const SidebarMantenimiento = ({ currentView, setCurrentView }) => {
       </div>
       <nav className="sidebar-menu">
         {menuItems.map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => setCurrentView(id)} className={`sidebar-item ${currentView === id ? 'active' : ''}`}>
+          <button key={id} onClick={() => { setCurrentView(id); if (setIsSidebarOpen) setIsSidebarOpen(false); }} className={`sidebar-item ${currentView === id ? 'active' : ''}`}>
             <Icon size={18} /> <span>{label}</span>
           </button>
         ))}

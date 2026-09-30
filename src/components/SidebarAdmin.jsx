@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserCog } from 'lucide-react';
 
-export const SidebarAdmin = ({ currentView, setCurrentView }) => {
+export const SidebarAdmin = ({ currentView, setCurrentView, setIsSidebarOpen }) => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -15,7 +15,7 @@ export const SidebarAdmin = ({ currentView, setCurrentView }) => {
 
       <nav className="sidebar-menu">
         <button
-          onClick={() => setCurrentView('usuarios')}
+          onClick={() => { setCurrentView('usuarios'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}
           className={`sidebar-item ${currentView === 'usuarios' ? 'active' : ''}`}
         >
           <UserCog size={18} />

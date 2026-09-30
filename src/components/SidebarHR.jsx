@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { LayoutDashboard, Users, FileText, CalendarCheck, Settings, AlertTriangle } from 'lucide-react';
 
-export const SidebarHR = ({ currentView, setCurrentView }) => {
+export const SidebarHR = ({ currentView, setCurrentView, setIsSidebarOpen }) => {
   const { activeRole } = useApp();
 
   const getMenuItemClass = (viewName) => {
@@ -21,29 +21,29 @@ export const SidebarHR = ({ currentView, setCurrentView }) => {
       </div>
 
       <nav className="sidebar-menu">
-        <button className={getMenuItemClass('dashboard')} onClick={() => setCurrentView('dashboard')}>
+        <button className={getMenuItemClass('dashboard')} onClick={() => { setCurrentView('dashboard'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
           <LayoutDashboard size={18} className="sidebar-icon" />
           <span style={{ flex: 1, textAlign: 'left' }}>Dashboard RRHH</span>
         </button>
 
-        <button className={getMenuItemClass('empleados')} onClick={() => setCurrentView('empleados')}>
+        <button className={getMenuItemClass('empleados')} onClick={() => { setCurrentView('empleados'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
           <Users size={18} className="sidebar-icon" />
           <span style={{ flex: 1, textAlign: 'left' }}>Directorio de Empleados</span>
         </button>
 
-        <button className={getMenuItemClass('documentos')} onClick={() => setCurrentView('documentos')}>
+        <button className={getMenuItemClass('documentos')} onClick={() => { setCurrentView('documentos'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
           <FileText size={18} className="sidebar-icon" />
           <span style={{ flex: 1, textAlign: 'left' }}>Expedientes y Docs</span>
         </button>
 
-        <button className={getMenuItemClass('asistencias')} onClick={() => setCurrentView('asistencias')}>
+        <button className={getMenuItemClass('asistencias')} onClick={() => { setCurrentView('asistencias'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
           <CalendarCheck size={18} className="sidebar-icon" />
           <span style={{ flex: 1, textAlign: 'left' }}>Asistencias y Faltas</span>
         </button>
 
         <div style={{ height: '1px', background: 'var(--color-border-subtle)', margin: '16px 20px' }}></div>
 
-        <button className={getMenuItemClass('alertas')} onClick={() => setCurrentView('alertas')}>
+        <button className={getMenuItemClass('alertas')} onClick={() => { setCurrentView('alertas'); if (setIsSidebarOpen) setIsSidebarOpen(false); }}>
           <AlertTriangle size={18} className="sidebar-icon" />
           <span style={{ flex: 1, textAlign: 'left' }}>Alertas de Vencimiento</span>
         </button>

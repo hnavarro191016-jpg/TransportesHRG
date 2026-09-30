@@ -18,7 +18,7 @@ import {
   UserCog
 } from 'lucide-react';
 
-export const Sidebar = ({ currentView, setCurrentView }) => {
+export const Sidebar = ({ currentView, setCurrentView, setIsSidebarOpen }) => {
   const { data, activeRole } = useApp();
 
   // Calculate counters for badges
@@ -63,7 +63,10 @@ export const Sidebar = ({ currentView, setCurrentView }) => {
           return (
             <button
               key={item.id}
-              onClick={() => setCurrentView(item.id)}
+              onClick={() => {
+                setCurrentView(item.id);
+                if (setIsSidebarOpen) setIsSidebarOpen(false);
+              }}
               className={`sidebar-item ${isActive ? 'active' : ''}`}
               style={{
                 opacity: isAllowed ? 1 : 0.45,

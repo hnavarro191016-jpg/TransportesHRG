@@ -52,6 +52,7 @@ const MainLayout = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeModule, setActiveModule] = useState(() => localStorage.getItem('activeModule') || null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   React.useEffect(() => {
     if (activeModule) localStorage.setItem('activeModule', activeModule);
@@ -246,18 +247,23 @@ const MainLayout = () => {
 
   return (
     <div className="app-container">
-      {activeRole !== 'Operador' && (
-        activeModule === 'recursos_humanos' ? (
-          <SidebarHR currentView={currentView} setCurrentView={setCurrentView} />
-        ) : activeModule === 'capacitaciones' ? (
-          <SidebarCapacitaciones currentView={currentView} setCurrentView={setCurrentView} />
-        ) : activeModule === 'mantenimientos' ? (
-          <SidebarMantenimiento currentView={currentView} setCurrentView={setCurrentView} />
-        ) : activeModule === 'administracion' ? (
-          <SidebarAdmin currentView={currentView} setCurrentView={setCurrentView} />
-        ) : activeModule === 'monitoreo' ? null : (
-          <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
-        )
+      {activeRole !== 'Operador' && activeModule !== 'monitoreo' && (
+        <>
+          <div className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
+          <div className={`sidebar-mobile-wrapper ${isSidebarOpen ? 'open' : ''}`}>
+            {activeModule === 'recursos_humanos' ? (
+              <SidebarHR currentView={currentView} setCurrentView={setCurrentView} setIsSidebarOpen={setIsSidebarOpen} />
+            ) : activeModule === 'capacitaciones' ? (
+              <SidebarCapacitaciones currentView={currentView} setCurrentView={setCurrentView} setIsSidebarOpen={setIsSidebarOpen} />
+            ) : activeModule === 'mantenimientos' ? (
+              <SidebarMantenimiento currentView={currentView} setCurrentView={setCurrentView} setIsSidebarOpen={setIsSidebarOpen} />
+            ) : activeModule === 'administracion' ? (
+              <SidebarAdmin currentView={currentView} setCurrentView={setCurrentView} setIsSidebarOpen={setIsSidebarOpen} />
+            ) : (
+              <Sidebar currentView={currentView} setCurrentView={setCurrentView} setIsSidebarOpen={setIsSidebarOpen} />
+            )}
+          </div>
+        </>
       )}
       <div className="main-content">
         <Header 
@@ -267,6 +273,8 @@ const MainLayout = () => {
           setSearchTerm={setSearchTerm} 
           activeModule={activeModule}
           setActiveModule={setActiveModule}
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
         />
         <main className="page-wrapper">
           {renderView()}

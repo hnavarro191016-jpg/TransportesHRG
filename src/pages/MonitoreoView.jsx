@@ -88,7 +88,7 @@ export const MonitoreoView = () => {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured() || activeView === 'menu' || activeView === 'live') return; // Solo cargar historial si estamos en la vista de historial
+    if (!isSupabaseConfigured() || activeView === 'menu' || activeView === 'live') return;
 
     const fetchHistory = async () => {
       try {
@@ -97,7 +97,7 @@ export const MonitoreoView = () => {
         
         const { data: histData } = await supabase
           .from('romo_live_tracking_history')
-          .select('telegram_id, latitude, longitude')
+          .select('telegram_id, latitude, longitude, recorded_at')
           .gte('recorded_at', startTimestamp)
           .lte('recorded_at', endTimestamp)
           .order('recorded_at', { ascending: true })
@@ -107,9 +107,35 @@ export const MonitoreoView = () => {
           const histGrouped = {};
           histData.forEach(row => {
              if (!histGrouped[row.telegram_id]) histGrouped[row.telegram_id] = [];
-             histGrouped[row.telegram_id].push([row.latitude, row.longitude]);
+             histGrouped[row.telegram_id].push({
+               lat: row.latitude, 
+               lng: row.longitude, 
+               time: new Date(row.recorded_at)
+             });
           });
-          setHistory(histGrouped);
+          
+          // Agrupar en "Rutas/Viajes" si hay una brecha mayor a 30 minutos sin movimiento
+          const splitGrouped = {};
+          Object.keys(histGrouped).forEach(tid => {
+            const points = histGrouped[tid];
+            if(points.length === 0) return;
+            
+            let currentTrip = [points[0]];
+            let trips = [currentTrip];
+            
+            for(let i = 1; i < points.length; i++) {
+               const timeDiff = points[i].time.getTime() - points[i-1].time.getTime();
+               if (timeDiff > 30 * 60 * 1000) { // 30 minutos
+                  currentTrip = [points[i]];
+                  trips.push(currentTrip);
+               } else {
+                  currentTrip.push(points[i]);
+               }
+            }
+            splitGrouped[tid] = trips;
+          });
+          
+          setHistory(splitGrouped);
         } else {
           setHistory({});
         }
@@ -133,21 +159,36 @@ export const MonitoreoView = () => {
 
   const distances = useMemo(() => {
     const list = [];
-    Object.entries(history).forEach(([tid, coords]) => {
+    Object.entries(history).forEach(([tid, trips]) => {
       if (operatorFilter !== 'ALL' && operatorFilter !== tid) return;
 
-      const distance = getTotalDistance(coords);
       const unit = locations.find(loc => loc.telegram_id === tid);
       const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocida';
       
-      list.push({ tid, unitName, distance, coords });
+      let totalDistance = 0;
+      const parsedTrips = trips.map((trip, idx) => {
+          const coords = trip.map(p => [p.lat, p.lng]);
+          const distance = getTotalDistance(coords);
+          totalDistance += distance;
+          return {
+             id: `${tid}-trip-${idx}`,
+             num: idx + 1,
+             startTime: trip[0].time,
+             endTime: trip[trip.length-1].time,
+             distance,
+             coords,
+             colors: ['#dc2626', '#2563eb', '#16a34a', '#d97706', '#9333ea'][idx % 5] // Colores distintos para cada tramo
+          };
+      });
+
+      list.push({ tid, unitName, totalDistance, trips: parsedTrips });
     });
     return list;
   }, [history, locations, operatorFilter]);
 
 
   // ==========================================
-  // VISTA DE MENÚ PRINCIPAL (LAS DOS TARJETAS)
+  // VISTA DE MENÚ PRINCIPAL
   // ==========================================
   if (activeView === 'menu') {
     return (
@@ -160,8 +201,6 @@ export const MonitoreoView = () => {
         </p>
 
         <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          
-          {/* Tarjeta Live Tracking */}
           <div 
             onClick={() => setActiveView('live')}
             style={{
@@ -186,7 +225,6 @@ export const MonitoreoView = () => {
             </div>
           </div>
 
-          {/* Tarjeta Historial */}
           <div 
             onClick={() => setActiveView('history')}
             style={{
@@ -206,12 +244,8 @@ export const MonitoreoView = () => {
               Analiza los trayectos pasados, filtra por fechas y calcula el kilometraje recorrido por unidad.
             </p>
           </div>
-
         </div>
-
-        <style>{`
-          @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        `}</style>
+        <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }`}</style>
       </div>
     );
   }
@@ -222,52 +256,28 @@ export const MonitoreoView = () => {
   if (activeView === 'live') {
     return (
       <div style={{ padding: '24px', height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column' }}>
-        
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '24px' }}>
-          <button 
-            onClick={() => setActiveView('menu')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569' }}
-          >
+          <button onClick={() => setActiveView('menu')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569' }}>
             <ArrowLeft size={18} /> Volver
           </button>
-          
           <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>Live Tracking</h2>
-          
           <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '4px 12px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
             <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
             REC Live
           </div>
-
-          <button 
-            onClick={() => setIsFullScreen(true)}
-            style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
+          <button onClick={() => setIsFullScreen(true)} style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
             Pantalla Completa
           </button>
         </div>
         
         <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
           {isFullScreen && (
-            <button 
-              onClick={() => setIsFullScreen(false)}
-              style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-            >
+            <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa
             </button>
           )}
-          <MapContainer 
-            center={[23.6345, -102.5528]} 
-            zoom={5} 
-            minZoom={5}
-            maxBounds={[[14.0, -120.0], [33.0, -86.0]]}
-            maxBoundsViscosity={1.0}
-            style={{ height: '100%', width: '100%' }}
-          >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-            
+          <MapContainer center={[23.6345, -102.5528]} zoom={5} minZoom={5} maxBounds={[[14.0, -120.0], [33.0, -86.0]]} maxBoundsViscosity={1.0} style={{ height: '100%', width: '100%' }}>
+              <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {locations.map((loc) => (
               <Marker key={`live-${loc.telegram_id}`} position={[loc.latitude, loc.longitude]} icon={getTruckIcon(loc.last_updated)}>
                 <Popup>
@@ -292,104 +302,95 @@ export const MonitoreoView = () => {
       <div style={{ padding: '24px', height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column' }}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
-          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-              <button 
-                onClick={() => setActiveView('menu')}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569' }}
-              >
+              <button onClick={() => setActiveView('menu')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569' }}>
                 <ArrowLeft size={18} /> Volver
               </button>
               <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>Historial de Rutas</h2>
-              
-              <button 
-                onClick={() => setIsFullScreen(true)}
-                style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
+              <button onClick={() => setIsFullScreen(true)} style={{ padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                 Pantalla Completa
               </button>
             </div>
-            
-            {distances.length > 0 && (
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '4px' }}>
-                {distances.map(item => (
-                  <div key={`badge-${item.tid}`} style={{ backgroundColor: '#f1f5f9', padding: '6px 12px', borderRadius: '8px', fontSize: '14px', border: '1px solid #e2e8f0', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <strong>{item.unitName}</strong>
-                    <span style={{ color: '#0f172a' }}>{item.distance.toFixed(2)} km recorridos</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <label style={{ fontWeight: '500', color: '#475569', fontSize: '14px' }}>Operador:</label>
-              <select 
-                value={operatorFilter}
-                onChange={(e) => setOperatorFilter(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '14px' }}
-              >
+              <select value={operatorFilter} onChange={(e) => setOperatorFilter(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '14px' }}>
                 <option value="ALL">Todos los operadores</option>
                 {uniqueOperators.map(op => (
                   <option key={op.id} value={op.id}>{op.name} ({op.unit})</option>
                 ))}
               </select>
             </div>
-
             <span style={{ color: '#cbd5e1' }}>|</span>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <label style={{ fontWeight: '500', color: '#475569', fontSize: '14px' }}>Tiempo:</label>
-              <input 
-                type="date" 
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
-              />
-              <input 
-                type="time" 
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
-              />
+              <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }} />
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }} />
               <span style={{ color: '#64748b', fontSize: '14px' }}>a</span>
-              <input 
-                type="time" 
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
-              />
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }} />
             </div>
           </div>
         </div>
+
+        {/* Tablita de Rutas si hay un operador seleccionado o un resumen */}
+        {distances.length > 0 && (
+          <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
+            {distances.map(driver => (
+              <div key={driver.tid} style={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', minWidth: '350px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong style={{ fontSize: '16px' }}>{driver.unitName}</strong>
+                  <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Total: {driver.totalDistance.toFixed(2)} km</span>
+                </div>
+                
+                {/* Desglose de viajes (si es ALL solo muestra total, si es uno, muestra tabla) */}
+                {(operatorFilter !== 'ALL' || distances.length === 1) && (
+                  <div style={{ padding: '12px 16px' }}>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#64748b' }}>Se detectaron {driver.trips.length} viajes distintos hoy:</p>
+                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
+                          <th style={{ paddingBottom: '4px' }}>#</th>
+                          <th style={{ paddingBottom: '4px' }}>Inicio</th>
+                          <th style={{ paddingBottom: '4px' }}>Fin</th>
+                          <th style={{ paddingBottom: '4px', textAlign: 'right' }}>Distancia</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {driver.trips.map(trip => (
+                          <tr key={trip.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '6px 0' }}>
+                              <span style={{ backgroundColor: trip.colors, color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>{trip.num}</span>
+                            </td>
+                            <td style={{ padding: '6px 0' }}>{trip.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td style={{ padding: '6px 0' }}>{trip.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '500' }}>{trip.distance.toFixed(2)} km</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         
         <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
           {isFullScreen && (
-            <button 
-              onClick={() => setIsFullScreen(false)}
-              style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-            >
+            <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa
             </button>
           )}
-          <MapContainer 
-            center={[23.6345, -102.5528]} 
-            zoom={5} 
-            minZoom={5}
-            maxBounds={[[14.0, -120.0], [33.0, -86.0]]}
-            maxBoundsViscosity={1.0}
-            style={{ height: '100%', width: '100%' }}
-          >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+          <MapContainer center={[23.6345, -102.5528]} zoom={5} minZoom={5} maxBounds={[[14.0, -120.0], [33.0, -86.0]]} maxBoundsViscosity={1.0} style={{ height: '100%', width: '100%' }}>
+              <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             
-            {distances.map(item => (
-              <Polyline key={`hist-line-${item.tid}`} positions={item.coords} color="#dc2626" weight={4} opacity={0.8} />
+            {distances.map(driver => (
+               driver.trips.map(trip => (
+                 <Polyline key={`hist-line-${trip.id}`} positions={trip.coords} color={trip.colors} weight={4} opacity={0.8} />
+               ))
             ))}
           </MapContainer>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Bell, Search, UserCheck, RefreshCw, Moon, Sun, Grid, Menu } from 'lucide-react';
+import { Bell, Search, UserCheck, Moon, Sun, Grid, Menu, LogOut } from 'lucide-react';
 import { CheckInWidget } from './CheckInWidget';
 
 export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm, activeModule, setActiveModule, isSidebarOpen, setIsSidebarOpen }) => {
@@ -12,7 +12,6 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
 
   useEffect(() => {
     const handleScroll = () => {
-      // Find the scrollable container. It is likely the window or page-wrapper
       const currentScrollY = window.scrollY;
       
       if (currentScrollY > lastScrollY && currentScrollY > 60) {
@@ -33,23 +32,14 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
   const openWOCount = data.workOrders.filter(w => w.status === 'abierta' || w.status === 'en proceso').length;
   const totalAlerts = lowStockCount + outOfStockCount + openWOCount;
 
-  const rolesList = [
-    'Administrador',
-    'Encargado de almacén',
-    'Compras',
-    'Mecánico',
-    'Gerencia',
-    'Operador'
-  ];
-
   return (
     <header className={`header-bar ${isHeaderHidden ? 'header-hidden' : ''}`}>
-      <div className="header-brand" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="header-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {activeRole !== 'Operador' && activeModule !== 'monitoreo' && (
           <button 
             className="mobile-menu-btn"
             onClick={() => setIsSidebarOpen(true)}
-            title="Abrir Menú"
+            title="Abrir Menu"
             style={{ background: 'var(--bg-card-hover)', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'none', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}
           >
             <Menu size={20} />
@@ -57,43 +47,45 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
         )}
         <button 
           onClick={() => setActiveModule && setActiveModule(null)}
-          title="Regresar al Portal Empresarial (Módulos)"
+          title="Regresar al Portal Empresarial"
           style={{ background: 'var(--bg-card-hover)', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}
         >
           <Grid size={20} />
         </button>
-        <img src="/logo.jpg" alt="Transportes HRG" className="header-logo" />
-        <div>
-          <div className="header-title">Transportes Romo</div>
+        <img src="/logo.jpg" alt="Transportes HRG" className="header-logo desktop-only" />
+        <div className="header-title-container">
+          <div className="header-title desktop-only">Transportes Romo</div>
           <div className="header-subtitle">
             {activeModule === 'recursos_humanos' ? 'RECURSOS HUMANOS' :
              activeModule === 'capacitaciones' ? 'CAPACITACIONES' :
              activeModule === 'mantenimientos' ? 'MANTENIMIENTO' :
-             activeModule === 'administracion' ? 'ADMINISTRACIÓN GLOBAL' :
-             activeModule === 'monitoreo' ? 'MONITOREO SATELITAL' :
-             'CONTROL DE INVENTARIO'}
+             activeModule === 'administracion' ? 'ADMINISTRACION' :
+             activeModule === 'monitoreo' ? 'MONITOREO' :
+             'INVENTARIO'}
           </div>
         </div>
       </div>
 
       {/* Right controls */}
-      <div className="header-right-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+      <div className="header-right-controls">
         
-        <CheckInWidget />
+        <div className="desktop-only">
+          <CheckInWidget />
+        </div>
 
         {/* Global Search Input */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <div className="desktop-only" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <Search size={16} style={{ position: 'absolute', left: '12px', color: 'var(--color-text-muted)' }} />
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar código, refacción, unidad..."
+            placeholder="Buscar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
               paddingLeft: '36px',
               borderRadius: '9999px',
-              width: '210px',
+              width: '180px',
               fontSize: '0.8rem'
             }}
           />
@@ -101,7 +93,7 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
 
         {/* Theme Toggle Button */}
         <button
-          className="theme-toggle-btn"
+          className="theme-toggle-btn desktop-only"
           onClick={toggleTheme}
           title={`Cambiar a modo ${theme === 'light' ? 'oscuro' : 'claro'}`}
         >
@@ -148,8 +140,8 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
         </button>
 
         {/* User Profile and Logout */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="user-profile-badge">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="user-profile-badge desktop-only">
             <UserCheck size={16} style={{ color: 'var(--color-primary)' }} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{activeUser?.name}</span>
@@ -158,11 +150,12 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
           </div>
           
           <button 
-            className="btn btn-dark btn-sm" 
+            className="btn btn-dark btn-sm mobile-icon-btn" 
             onClick={logout}
-            title="Cerrar Sesión"
+            title="Cerrar Sesion"
           >
-            Salir
+            <span className="desktop-only">Salir</span>
+            <LogOut size={16} className="mobile-only" />
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   /* Brand Palette: HRG Red and Black */
   --color-primary: #dc2626; /* HRG Red */
   --color-primary-hover: #b91c1c;
@@ -727,9 +727,18 @@ body {
     display: flex !important;
   }
   .header-bar {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
+    flex-direction: row;
+    padding: 12px 16px;
+    height: 60px;
+  }
+  .header-brand {
+    gap: 8px;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: block !important;
   }
   .nav-pills-bar {
     overflow-x: auto;
@@ -779,3 +788,4 @@ body {
     background: #fff !important;
   }
 }
+

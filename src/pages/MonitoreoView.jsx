@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+﻿import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Truck, MapPinned, ArrowLeft } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
@@ -188,7 +188,7 @@ export const MonitoreoView = () => {
 
 
   // ==========================================
-  // VISTA DE MENÚ PRINCIPAL
+  // VISTA DE MENÃš PRINCIPAL
   // ==========================================
   if (activeView === 'menu') {
     return (
@@ -197,7 +197,7 @@ export const MonitoreoView = () => {
           Sistema de Rastreo Satelital
         </h1>
         <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '48px', fontSize: '1.1rem' }}>
-          Selecciona el submódulo al que deseas ingresar
+          Selecciona el submÃ³dulo al que deseas ingresar
         </p>
 
         <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -217,7 +217,7 @@ export const MonitoreoView = () => {
             </div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '12px' }}>Live Tracking</h2>
             <p style={{ color: '#64748b', textAlign: 'center' }}>
-              Monitorea la ubicación de todas tus unidades en ruta en tiempo real.
+              Monitorea la ubicaciÃ³n de todas tus unidades en ruta en tiempo real.
             </p>
             <div style={{ marginTop: '24px', backgroundColor: '#fee2e2', color: '#dc2626', padding: '6px 16px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
               <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
@@ -255,7 +255,7 @@ export const MonitoreoView = () => {
   // ==========================================
   if (activeView === 'live') {
     return (
-      <div style={{ padding: '24px', height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '16px', minHeight: 'calc(100dvh - 100px)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '24px' }}>
           <button onClick={() => setActiveView('menu')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569' }}>
             <ArrowLeft size={18} /> Volver
@@ -270,7 +270,7 @@ export const MonitoreoView = () => {
           </button>
         </div>
         
-        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, minHeight: '400px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
           {isFullScreen && (
             <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa
@@ -299,7 +299,7 @@ export const MonitoreoView = () => {
   // ==========================================
   if (activeView === 'history') {
     return (
-      <div style={{ padding: '24px', height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '16px', minHeight: 'calc(100dvh - 100px)', display: 'flex', flexDirection: 'column' }}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -378,7 +378,7 @@ export const MonitoreoView = () => {
           </div>
         )}
         
-        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999 } : { flex: 1, minHeight: '400px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
           {isFullScreen && (
             <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa
@@ -400,3 +400,4 @@ export const MonitoreoView = () => {
 
   return null;
 };
+

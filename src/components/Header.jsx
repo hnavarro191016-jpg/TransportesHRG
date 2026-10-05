@@ -26,10 +26,10 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
-  // Calculate total active alerts count
-  const lowStockCount = data.products.filter(p => p.status === 'activo' && p.currentStock > 0 && p.currentStock <= p.minStock).length;
-  const outOfStockCount = data.products.filter(p => p.status === 'activo' && p.currentStock === 0).length;
-  const openWOCount = data.workOrders.filter(w => w.status === 'abierta' || w.status === 'en proceso').length;
+  // Calculate total active alerts count (only relevant for inventory)
+  const lowStockCount = data?.products?.filter(p => p.status === 'activo' && p.currentStock > 0 && p.currentStock <= p.minStock).length || 0;
+  const outOfStockCount = data?.products?.filter(p => p.status === 'activo' && p.currentStock === 0).length || 0;
+  const openWOCount = data?.workOrders?.filter(w => w.status === 'abierta' || w.status === 'en proceso').length || 0;
   const totalAlerts = lowStockCount + outOfStockCount + openWOCount;
 
   return (
@@ -61,35 +61,41 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
              activeModule === 'mantenimientos' ? 'MANTENIMIENTO' :
              activeModule === 'administracion' ? 'ADMINISTRACION' :
              activeModule === 'monitoreo' ? 'MONITOREO' :
+             activeModule === null ? 'PORTAL EMPRESARIAL' :
              'INVENTARIO'}
           </div>
         </div>
       </div>
 
       {/* Right controls */}
-      <div className="header-right-controls">
+      <div className="header-right-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
         
-        <div className="desktop-only">
-          <CheckInWidget />
-        </div>
+        {/* Mostrar "Checar Entrada" SOLO en el Portal Principal (activeModule === null) */}
+        {!activeModule && (
+          <div className="desktop-only">
+            <CheckInWidget />
+          </div>
+        )}
 
-        {/* Global Search Input */}
-        <div className="desktop-only" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Search size={16} style={{ position: 'absolute', left: '12px', color: 'var(--color-text-muted)' }} />
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              paddingLeft: '36px',
-              borderRadius: '9999px',
-              width: '180px',
-              fontSize: '0.8rem'
-            }}
-          />
-        </div>
+        {/* Global Search Input - SOLO en Inventario */}
+        {(!activeModule || activeModule === 'inventario') && (
+          <div className="desktop-only" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Search size={16} style={{ position: 'absolute', left: '12px', color: 'var(--color-text-muted)' }} />
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                paddingLeft: '36px',
+                borderRadius: '9999px',
+                width: '180px',
+                fontSize: '0.8rem'
+              }}
+            />
+          </div>
+        )}
 
         {/* Theme Toggle Button */}
         <button
@@ -100,44 +106,46 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
 
-        {/* Alerts Button */}
-        <button
-          onClick={() => setCurrentView('alertas')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: totalAlerts > 0 ? 'var(--color-warning)' : 'var(--color-text-muted)',
-            cursor: 'pointer',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '8px'
-          }}
-          title="Ver Alertas del Sistema"
-        >
-          <Bell size={20} />
-          {totalAlerts > 0 && (
-            <span
-              style={{
-                position: 'absolute',
-                top: '2px',
-                right: '2px',
-                background: 'var(--color-danger)',
-                color: '#fff',
-                fontSize: '0.65rem',
-                fontWeight: 800,
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {totalAlerts}
-            </span>
-          )}
-        </button>
+        {/* Alerts Button - SOLO en Inventario */}
+        {(!activeModule || activeModule === 'inventario') && (
+          <button
+            onClick={() => setCurrentView('alertas')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: totalAlerts > 0 ? 'var(--color-warning)' : 'var(--color-text-muted)',
+              cursor: 'pointer',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '8px'
+            }}
+            title="Ver Alertas de Inventario"
+          >
+            <Bell size={20} />
+            {totalAlerts > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '2px',
+                  right: '2px',
+                  background: 'var(--color-danger)',
+                  color: '#fff',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {totalAlerts}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* User Profile and Logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -153,6 +161,7 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
             className="btn btn-dark btn-sm mobile-icon-btn" 
             onClick={logout}
             title="Cerrar Sesion"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <span className="desktop-only">Salir</span>
             <LogOut size={16} className="mobile-only" />

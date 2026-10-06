@@ -281,7 +281,7 @@ export const MonitoreoView = () => {
 
               {distances.map(driver => (
                  driver.trips.map(trip => (
-                   <Polyline key={"live-hist-line-$(${trip.id})"} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={8} dashArray="8, 8" />
+                   <Polyline key={"live-hist-line-" + trip.id} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={8} dashArray="8, 8" />
                  ))
               ))}
 
@@ -407,6 +407,7 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 
 
 

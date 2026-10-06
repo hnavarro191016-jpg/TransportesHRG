@@ -175,13 +175,14 @@ export const MonitoreoView = () => {
             ...prev,
             [tid]: {
               name: json.data.full_name || json.data.Nombre || 'Desconocido',
-              unit: json.data.Flotilla || json.data.Unidad || 'Sin Asignar'
+              unit: json.data.Flotilla || json.data.Unidad || 'Sin Asignar',
+              raw: json.data
             }
           }));
         } else {
           setOperatorDetails(prev => ({
             ...prev,
-            [tid]: { name: 'Desconocido', unit: 'Sin Asignar' }
+            [tid]: { name: 'Desconocido', unit: 'Sin Asignar', raw: null }
           }));
         }
       } catch (error) {
@@ -192,7 +193,7 @@ export const MonitoreoView = () => {
     validLocations.forEach(loc => {
       if (!operatorDetails[loc.telegram_id]) {
         // Para evitar llamadas repetidas mientras se resuelve la promesa, lo marcamos como 'cargando'
-        setOperatorDetails(prev => ({ ...prev, [loc.telegram_id]: { name: 'Cargando...', unit: '...' } }));
+        setOperatorDetails(prev => ({ ...prev, [loc.telegram_id]: { name: 'Cargando...', unit: '...', raw: null } }));
         fetchOperatorData(loc.telegram_id);
       }
     });
@@ -206,7 +207,8 @@ export const MonitoreoView = () => {
         id: tid,
         // Priorizamos lo que viene de Google Sheets, si no hay, intentamos lo de la base de datos
         name: (details.name !== 'Desconocido' && details.name !== 'Cargando...') ? details.name : (loc.driver_name || details.name || 'Desconocido'),
-        unit: (details.unit !== 'Sin Asignar' && details.unit !== '...') ? details.unit : (loc.unit_id || details.unit || 'Sin Asignar')
+        unit: (details.unit !== 'Sin Asignar' && details.unit !== '...') ? details.unit : (loc.unit_id || details.unit || 'Sin Asignar'),
+        raw: details.raw || null
       };
     });
   }, [locations, operatorDetails]);
@@ -381,10 +383,22 @@ export const MonitoreoView = () => {
                       }}
                     >
                       <Popup>
-                        <strong>Unidad: {operatorData.unit}</strong><br/>
-                        Operador: {operatorData.name}<br/>
-                        Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}<br/>
-                        <em style={{fontSize: '11px', color: '#64748b'}}>Doble click al icono para acercar</em>
+                        <div style={{ minWidth: '200px' }}>
+                          <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
+                            Unidad: <strong>{operatorData.unit}</strong>
+                          </h3>
+                          <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                            <div><strong>Operador:</strong> {operatorData.name}</div>
+                            {operatorData.raw?.Telefono && <div><strong>Teléfono:</strong> {operatorData.raw.Telefono}</div>}
+                            {operatorData.raw?.Empresa && <div><strong>Empresa:</strong> {operatorData.raw.Empresa}</div>}
+                            {operatorData.raw?.status && <div><strong>Estatus:</strong> {operatorData.raw.status}</div>}
+                            {operatorData.raw?.licenciaConductor && <div><strong>Licencia:</strong> {operatorData.raw.licenciaConductor}</div>}
+                            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0', color: '#64748b', fontSize: '11px' }}>
+                              Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}
+                              <br/><em>Doble click al icono para acercar</em>
+                            </div>
+                          </div>
+                        </div>
                       </Popup>
                     </Marker>
                   );

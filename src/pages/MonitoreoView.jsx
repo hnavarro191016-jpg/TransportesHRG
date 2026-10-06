@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Truck, MapPinned, ArrowLeft } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
@@ -162,16 +162,54 @@ export const MonitoreoView = () => {
 
   const validLocations = locations.filter(l => { const lat = parseFloat(l.latitude); const lng = parseFloat(l.longitude); return lat > 14 && lat < 33 && lng < -86 && lng > -119; });
 
+  const [operatorDetails, setOperatorDetails] = useState({});
+
+  useEffect(() => {
+    const fetchOperatorData = async (tid) => {
+      try {
+        const url = `https://script.google.com/macros/s/AKfycbxKf-GrXIkxtEisOMyvPNrxNPgHqWzujf4PtgapjejstWJC4ogaAkQ7IpQDBzn9g0F-yw/exec?source=REGISTRO_BOT&field=TELEGRAM&key=${tid}`;
+        const response = await fetch(url);
+        const json = await response.json();
+        if (json.ok && json.found && json.data) {
+          setOperatorDetails(prev => ({
+            ...prev,
+            [tid]: {
+              name: json.data.full_name || json.data.Nombre || 'Desconocido',
+              unit: json.data.Flotilla || json.data.Unidad || 'Sin Asignar'
+            }
+          }));
+        } else {
+          setOperatorDetails(prev => ({
+            ...prev,
+            [tid]: { name: 'Desconocido', unit: 'Sin Asignar' }
+          }));
+        }
+      } catch (error) {
+        console.error("Error obteniendo datos de Google Sheets para", tid, error);
+      }
+    };
+
+    validLocations.forEach(loc => {
+      if (!operatorDetails[loc.telegram_id]) {
+        // Para evitar llamadas repetidas mientras se resuelve la promesa, lo marcamos como 'cargando'
+        setOperatorDetails(prev => ({ ...prev, [loc.telegram_id]: { name: 'Cargando...', unit: '...' } }));
+        fetchOperatorData(loc.telegram_id);
+      }
+    });
+  }, [validLocations, operatorDetails]);
+
   const uniqueOperators = useMemo(() => {
     return Array.from(new Set(validLocations.map(loc => loc.telegram_id))).map(tid => {
       const loc = validLocations.find(l => l.telegram_id === tid);
+      const details = operatorDetails[tid] || {};
       return {
         id: tid,
-        name: loc.driver_name || 'Desconocido',
-          unit: loc.unit_id || 'Sin Asignar'
+        // Priorizamos lo que viene de Google Sheets, si no hay, intentamos lo de la base de datos
+        name: (details.name !== 'Desconocido' && details.name !== 'Cargando...') ? details.name : (loc.driver_name || details.name || 'Desconocido'),
+        unit: (details.unit !== 'Sin Asignar' && details.unit !== '...') ? details.unit : (loc.unit_id || details.unit || 'Sin Asignar')
       };
     });
-  }, [locations]);
+  }, [locations, operatorDetails]);
 
   const distances = useMemo(() => {
     const list = [];
@@ -328,24 +366,29 @@ export const MonitoreoView = () => {
                    ));
                 })}
   
-                {validLocations.filter(loc => !selectedLiveTruck || loc.telegram_id === selectedLiveTruck).map((loc) => (
-                <Marker 
-                  key={"live-" + loc.telegram_id} 
-                  position={[loc.latitude, loc.longitude]} 
-                  icon={getTruckIcon(loc.last_updated)}
-                  eventHandlers={{
-                    click: () => setSelectedLiveTruck(loc.telegram_id === selectedLiveTruck ? null : loc.telegram_id),
-                    dblclick: () => setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() })
-                  }}
-                >
-                  <Popup>
-                    <strong>Unidad: {loc.unit_id || 'Sin Asignar'}</strong><br/>
-                    Operador: {loc.driver_name || 'Desconocido'}<br/>
-                    Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}<br/>
-                    <em style={{fontSize: '11px', color: '#64748b'}}>Doble click al icono para acercar</em>
-                  </Popup>
-                </Marker>
-              ))}
+                {validLocations.filter(loc => !selectedLiveTruck || loc.telegram_id === selectedLiveTruck).map((loc) => {
+                  // Buscar los detalles enriquecidos (Google Sheets) en uniqueOperators
+                  const operatorData = uniqueOperators.find(op => op.id === loc.telegram_id) || { unit: loc.unit_id || 'Sin Asignar', name: loc.driver_name || 'Desconocido' };
+                  
+                  return (
+                    <Marker 
+                      key={"live-" + loc.telegram_id} 
+                      position={[loc.latitude, loc.longitude]} 
+                      icon={getTruckIcon(loc.last_updated)}
+                      eventHandlers={{
+                        click: () => setSelectedLiveTruck(loc.telegram_id === selectedLiveTruck ? null : loc.telegram_id),
+                        dblclick: () => setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() })
+                      }}
+                    >
+                      <Popup>
+                        <strong>Unidad: {operatorData.unit}</strong><br/>
+                        Operador: {operatorData.name}<br/>
+                        Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}<br/>
+                        <em style={{fontSize: '11px', color: '#64748b'}}>Doble click al icono para acercar</em>
+                      </Popup>
+                    </Marker>
+                  );
+                })}
             </MapContainer>
         </div>
         <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }`}</style>

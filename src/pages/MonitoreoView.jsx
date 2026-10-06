@@ -328,7 +328,7 @@ export const MonitoreoView = () => {
                    ));
                 })}
   
-                {validLocations.map((loc) => (
+                {validLocations.filter(loc => !selectedLiveTruck || loc.telegram_id === selectedLiveTruck).map((loc) => (
                 <Marker 
                   key={"live-" + loc.telegram_id} 
                   position={[loc.latitude, loc.longitude]} 
@@ -459,6 +459,7 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 
 
 

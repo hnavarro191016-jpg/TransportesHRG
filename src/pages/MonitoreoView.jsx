@@ -118,7 +118,7 @@ export const MonitoreoView = () => {
 
         if (histData) {
           const histGrouped = {};
-          const validHistData = histData.filter(r => r.latitude !== 0 && r.longitude !== 0 && Math.abs(r.latitude) > 1);
+          const validHistData = histData.filter(r => r.latitude > 14 && r.latitude < 33 && r.longitude < -86 && r.longitude > -119);
           validHistData.forEach(row => {
              if (!histGrouped[row.telegram_id]) histGrouped[row.telegram_id] = [];
              histGrouped[row.telegram_id].push({
@@ -160,7 +160,7 @@ export const MonitoreoView = () => {
     fetchHistory();
   }, [dateFilter, startTime, endTime, activeView]);
 
-  const validLocations = locations.filter(l => l.latitude !== 0 && l.longitude !== 0 && Math.abs(l.latitude) > 1);
+  const validLocations = locations.filter(l => l.latitude > 14 && l.latitude < 33 && l.longitude < -86 && l.longitude > -119);
 
   const uniqueOperators = useMemo(() => {
     return Array.from(new Set(validLocations.map(loc => loc.telegram_id))).map(tid => {
@@ -300,7 +300,7 @@ export const MonitoreoView = () => {
                    if (!selectedLiveTruck) return null; // SOLO MOSTRAR SI HAY SELECCIONADO
                    if (selectedLiveTruck && driver.tid !== selectedLiveTruck) return null;
                    return driver.trips.map(trip => (
-                     <Polyline key={"live-hist-line-" + trip.id} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={8} dashArray="8, 8" />
+                     <Polyline key={"live-hist-line-" + trip.id} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={1} dashArray="8, 8" />
                    ));
                 })}
   
@@ -424,7 +424,7 @@ export const MonitoreoView = () => {
             
             {distances.map(driver => (
                driver.trips.map(trip => (
-                 <Polyline key={`hist-line-${trip.id}`} positions={trip.coords} color={trip.colors} weight={4} opacity={0.8} smoothFactor={8} />
+                 <Polyline key={`hist-line-${trip.id}`} positions={trip.coords} color={trip.colors} weight={4} opacity={0.8} smoothFactor={1} />
                ))
             ))}
           </MapContainer>
@@ -435,6 +435,7 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 
 
 

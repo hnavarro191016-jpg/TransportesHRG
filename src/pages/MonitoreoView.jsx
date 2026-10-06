@@ -278,7 +278,14 @@ export const MonitoreoView = () => {
           )}
           <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {locations.map((loc) => (
+
+              {distances.map(driver => (
+                 driver.trips.map(trip => (
+                   <Polyline key={"live-hist-line-$(${trip.id})"} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={8} dashArray="8, 8" />
+                 ))
+              ))}
+
+              {locations.map((loc) => (
               <Marker key={`live-${loc.telegram_id}`} position={[loc.latitude, loc.longitude]} icon={getTruckIcon(loc.last_updated)}>
                 <Popup>
                   <strong>Unidad: {loc.unit_id || 'Sin Asignar'}</strong><br/>
@@ -400,6 +407,7 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 
 
 

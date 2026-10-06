@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+﻿import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Truck, MapPinned, ArrowLeft } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
@@ -88,7 +88,7 @@ export const MonitoreoView = () => {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured() || activeView === 'menu' || activeView === 'live') return;
+    if (!isSupabaseConfigured() || activeView === 'menu') return;
 
     const fetchHistory = async () => {
       try {
@@ -188,7 +188,7 @@ export const MonitoreoView = () => {
 
 
   // ==========================================
-  // VISTA DE MENÃš PRINCIPAL
+  // VISTA DE MENÃƒÅ¡ PRINCIPAL
   // ==========================================
   if (activeView === 'menu') {
     return (
@@ -197,7 +197,7 @@ export const MonitoreoView = () => {
           Sistema de Rastreo Satelital
         </h1>
         <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '48px', fontSize: '1.1rem' }}>
-          Selecciona el submÃ³dulo al que deseas ingresar
+          Selecciona el submÃƒÂ³dulo al que deseas ingresar
         </p>
 
         <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -217,7 +217,7 @@ export const MonitoreoView = () => {
             </div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '12px' }}>Live Tracking</h2>
             <p style={{ color: '#64748b', textAlign: 'center' }}>
-              Monitorea la ubicaciÃ³n de todas tus unidades en ruta en tiempo real.
+              Monitorea la ubicaciÃƒÂ³n de todas tus unidades en ruta en tiempo real.
             </p>
             <div style={{ marginTop: '24px', backgroundColor: '#fee2e2', color: '#dc2626', padding: '6px 16px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
               <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
@@ -400,4 +400,5 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 

@@ -277,10 +277,34 @@ export const MonitoreoView = () => {
             <ArrowLeft size={18} /> Volver
           </button>
           <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>Live Tracking</h2>
-          <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '4px 12px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
-            <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
-            REC Live
-          </div>
+                      <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '4px 12px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
+              <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
+              REC Live
+            </div>
+            
+            <div style={{ marginLeft: '16px', display: 'flex', alignItems: 'center' }}>
+              <select 
+                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '14px', fontWeight: '500', minWidth: '250px' }}
+                value={selectedLiveTruck || ''}
+                onChange={(e) => {
+                  const tid = e.target.value;
+                  if (!tid) {
+                    setSelectedLiveTruck(null);
+                    return;
+                  }
+                  setSelectedLiveTruck(tid);
+                  const loc = validLocations.find(l => l.telegram_id === tid);
+                  if (loc) {
+                    setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() });
+                  }
+                }}
+              >
+                <option value="">-- Todos los Operadores --</option>
+                {uniqueOperators.map(op => (
+                  <option key={op.id} value={op.id}>{op.unit} - {op.name}</option>
+                ))}
+              </select>
+            </div>
           <button onClick={() => setIsFullScreen(true)} style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
             Pantalla Completa
           </button>
@@ -435,6 +459,7 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 
 
 

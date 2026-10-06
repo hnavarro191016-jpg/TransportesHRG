@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { INITIAL_DATA } from '../data/initialData';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 const AppContext = createContext(null);
 
@@ -103,15 +104,20 @@ export const AppProvider = ({ children }) => {
       finalEmail = `${finalEmail.trim().toLowerCase()}@hrg.local`;
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Usar un cliente temporal sin persistencia para no destruir la sesión del administrador actual
+    const tempSupabase = createClient(
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_ANON_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+
+    const { data: authData, error: authError } = await tempSupabase.auth.signUp({
       email: finalEmail,
       password,
       options: { data: { name, must_change_password: forcePasswordChange } }
     });
+    
     if (authError) throw authError;
-    // El trigger de Supabase crea un perfil Pendiente e inactivo. Los roles solo se
-    // asignan desde Administración; nunca desde el navegador durante el registro.
-    if (authData.session) await supabase.auth.signOut();
     return authData;
   };
 

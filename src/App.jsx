@@ -22,7 +22,7 @@ import { LoginView } from './pages/LoginView';
 import { useApp } from './context/AppContext';
 import { ModuleHubView } from './pages/ModuleHubView';
 import { MonitoreoView } from './pages/MonitoreoView';
-
+import { ChangePasswordView } from './pages/ChangePasswordView';
 import { SidebarHR } from './components/SidebarHR';
 import { SidebarCapacitaciones } from './components/SidebarCapacitaciones';
 import { SidebarAdmin } from './components/SidebarAdmin';
@@ -194,6 +194,10 @@ const MainLayout = () => {
 
   if (!session) {
     return <LoginView />;
+  }
+
+  if (session?.user?.user_metadata?.must_change_password) {
+    return <ChangePasswordView />;
   }
 
   if (session && !activeUser) {

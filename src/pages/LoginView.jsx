@@ -169,11 +169,11 @@ export const LoginView = () => {
             )}
             
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Correo Electrónico</label>
+              <label className="form-label">{isLogin ? 'Nombre de Usuario (o Correo)' : 'Nombre de Usuario'}</label>
               <input
-                type="email"
+                type="text"
                 className="form-control"
-                placeholder="usuario@transporteshrg.mx"
+                placeholder="Ej. juanperez"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

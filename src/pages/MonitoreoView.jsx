@@ -9,7 +9,7 @@ const truckSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fi
 
 const getTruckIcon = (last_updated) => {
   const isOffline = (new Date() - new Date(last_updated)) > 180000; 
-  const bgColor = isOffline ? '#64748b' : '#dc2626'; 
+  const bgColor = isOffline ? '#64748b' : '#16a34a'; 
   
   return new L.divIcon({
     className: 'custom-truck-icon',

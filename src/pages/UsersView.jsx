@@ -49,7 +49,7 @@ export const UsersView = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const authData = await register(newUser.name, newUser.email, newUser.password);
+      const authData = await register(newUser.name, newUser.email, newUser.password, true);
       
       // Delay slightly as the supabase trigger might take a moment to insert into romo_users
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -193,21 +193,21 @@ export const UsersView = () => {
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '8px' }}>Correo Electrónico</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '8px' }}>Nombre de Usuario (Login)</label>
                 <input 
-                  type="email" 
+                  type="text" 
                   className="form-control" 
-                  placeholder="juan@transportesromo.com"
+                  placeholder="Ej. juanperez"
                   required
                   value={newUser.email}
-                  onChange={e => setNewUser({...newUser, email: e.target.value})}
+                  onChange={e => setNewUser({...newUser, email: e.target.value.replace(/\s/g, '')})}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '8px' }}>Contraseña</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '8px' }}>Contraseña Temporal</label>
                 <input 
-                  type="password" 
+                  type="text" 
                   className="form-control"
                   placeholder="Mínimo 6 caracteres"
                   required
@@ -215,6 +215,9 @@ export const UsersView = () => {
                   value={newUser.password}
                   onChange={e => setNewUser({...newUser, password: e.target.value})}
                 />
+                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '6px' }}>
+                  Al iniciar sesión por primera vez, se le pedirá al usuario que establezca su propia contraseña definitiva.
+                </p>
               </div>
 
               <div>

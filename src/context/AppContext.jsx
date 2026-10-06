@@ -82,19 +82,31 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (emailOrUser, password) => {
     if (!supabase) throw new Error("Supabase no conectado");
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    let finalEmail = emailOrUser;
+    if (!finalEmail.includes('@')) {
+      finalEmail = `${finalEmail.trim().toLowerCase()}@hrg.local`;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email: finalEmail, password });
     if (error) throw error;
     return data;
   };
 
-  const register = async (name, email, password) => {
+  const register = async (name, emailOrUser, password, forcePasswordChange = false) => {
     if (!supabase) throw new Error("Supabase no conectado");
+
+    let finalEmail = emailOrUser;
+    if (!finalEmail.includes('@')) {
+      finalEmail = `${finalEmail.trim().toLowerCase()}@hrg.local`;
+    }
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
+      email: finalEmail,
       password,
-      options: { data: { name } }
+      options: { data: { name, must_change_password: forcePasswordChange } }
     });
     if (authError) throw authError;
     // El trigger de Supabase crea un perfil Pendiente e inactivo. Los roles solo se

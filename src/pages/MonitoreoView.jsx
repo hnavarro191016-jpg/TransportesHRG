@@ -167,7 +167,7 @@ export const MonitoreoView = () => {
       const loc = validLocations.find(l => l.telegram_id === tid);
       return {
         id: tid,
-        name: loc.driver_name || 'Desconocido',
+        name: loc.driver_name || 'Desconocido
         unit: loc.unit_id || 'Sin Asignar'
       };
     });
@@ -179,7 +179,7 @@ export const MonitoreoView = () => {
       if (operatorFilter !== 'ALL' && operatorFilter !== tid) return;
 
       const unit = validLocations.find(loc => loc.telegram_id === tid);
-      const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocida';
+      const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocido
       
       let totalDistance = 0;
       const parsedTrips = trips.map((trip, idx) => {
@@ -213,7 +213,7 @@ export const MonitoreoView = () => {
           Sistema de Rastreo Satelital
         </h1>
         <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '48px', fontSize: '1.1rem' }}>
-          Selecciona el submÃƒÂ³dulo al que deseas ingresar
+          Selecciona el submódulo al que deseas ingresar
         </p>
 
         <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -233,7 +233,7 @@ export const MonitoreoView = () => {
             </div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '12px' }}>Live Tracking</h2>
             <p style={{ color: '#64748b', textAlign: 'center' }}>
-              Monitorea la ubicaciÃƒÂ³n de todas tus unidades en ruta en tiempo real.
+              Monitorea la ubicación de todas tus unidades en ruta en tiempo real.
             </p>
             <div style={{ marginTop: '24px', backgroundColor: '#fee2e2', color: '#dc2626', padding: '6px 16px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
               <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
@@ -340,7 +340,7 @@ export const MonitoreoView = () => {
                 >
                   <Popup>
                     <strong>Unidad: {loc.unit_id || 'Sin Asignar'}</strong><br/>
-                    Operador: {loc.driver_name || 'Desconocido'}<br/>
+                    Operador: {loc.driver_name || 'Desconocido
                     Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}<br/>
                     <em style={{fontSize: '11px', color: '#64748b'}}>Doble click al icono para acercar</em>
                   </Popup>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { UserCog, ShieldCheck, CheckCircle, XCircle, AlertCircle, Plus, X, UserPlus } from 'lucide-react';
 
@@ -11,16 +11,16 @@ export const UsersView = () => {
     name: '',
     email: '',
     password: '',
-    role: 'Pendiente'
+    role: 'Operador'
   });
 
   const roleDescriptions = [
-    { role: 'Administrador', desc: 'Acceso total a todos los módulos y configuraciones del sistema.' },
-    { role: 'Encargado de almacén', desc: 'Gestión de productos, entradas, salidas, transferencias, conteos físicos y reportes.' },
-    { role: 'Compras', desc: 'Administración de proveedores, registro de ordenes de compra y entradas.' },
-    { role: 'Mecánico', desc: 'Consulta de refacciones, catálogo de flota y apertura/cierre de órdenes de trabajo (OT).' },
+    { role: 'Administrador', desc: 'Acceso total a todos los mÃ³dulos y configuraciones del sistema.' },
+    { role: 'Encargado de almacÃ©n', desc: 'GestiÃ³n de productos, entradas, salidas, transferencias, conteos fÃ­sicos y reportes.' },
+    { role: 'Compras', desc: 'AdministraciÃ³n de proveedores, registro de ordenes de compra y entradas.' },
+    { role: 'MecÃ¡nico', desc: 'Consulta de refacciones, catÃ¡logo de flota y apertura/cierre de Ã³rdenes de trabajo (OT).' },
     { role: 'Gerencia', desc: 'Acceso de lectura a Dashboard de indicadores, alertas y reportes financieros.' },
-    { role: 'Monitoreo', desc: 'Acceso exclusivo al submódulo de rastreo GPS e historial de rutas.' }
+    { role: 'Monitoreo', desc: 'Acceso exclusivo al submÃ³dulo de rastreo GPS e historial de rutas.' }
   ];
 
   if (activeRole !== 'Administrador') {
@@ -59,9 +59,9 @@ export const UsersView = () => {
       }
       
       await fetchFromSupabase();
-      addToast('Usuario creado con éxito', 'success');
+      addToast('Usuario creado con Ã©xito', 'success');
       setShowModal(false);
-      setNewUser({ name: '', email: '', password: '', role: 'Pendiente' });
+      setNewUser({ name: '', email: '', password: '', role: 'Operador' });
     } catch (error) {
       addToast(`Error al crear usuario: ${error.message}`, 'danger');
     } finally {
@@ -74,7 +74,7 @@ export const UsersView = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <UserCog size={24} style={{ color: 'var(--color-secondary)' }} /> Administración de Usuarios
+            <UserCog size={24} style={{ color: 'var(--color-secondary)' }} /> AdministraciÃ³n de Usuarios
           </h2>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             Otorga acceso a nuevos empleados y gestiona sus roles en el sistema.
@@ -99,7 +99,7 @@ export const UsersView = () => {
             <thead>
               <tr>
                 <th>Nombre de Usuario</th>
-                <th>Correo Electrónico</th>
+                <th>Correo ElectrÃ³nico</th>
                 <th>Rol</th>
                 <th>Estado (Acceso)</th>
                 <th style={{ textAlign: 'right' }}>Acciones</th>
@@ -108,7 +108,7 @@ export const UsersView = () => {
             <tbody>
               {data.users?.map((usr) => (
                 <tr key={usr.id} style={{ background: !usr.active ? 'rgba(239, 68, 68, 0.05)' : 'transparent' }}>
-                  <td style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{usr.name} {usr.id === activeUser?.id && '(Tú)'}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{usr.name} {usr.id === activeUser?.id && '(TÃº)'}</td>
                   <td style={{ color: 'var(--color-text-muted)' }}>{usr.email}</td>
                   <td>
                     <select 
@@ -185,7 +185,7 @@ export const UsersView = () => {
                 <input 
                   type="text" 
                   className="form-control" 
-                  placeholder="Ej. Juan Pérez"
+                  placeholder="Ej. Juan PÃ©rez"
                   required
                   value={newUser.name}
                   onChange={e => setNewUser({...newUser, name: e.target.value})}
@@ -205,18 +205,18 @@ export const UsersView = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '8px' }}>Contraseña Temporal</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '8px' }}>ContraseÃ±a Temporal</label>
                 <input 
                   type="text" 
                   className="form-control"
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="MÃ­nimo 6 caracteres"
                   required
                   minLength={6}
                   value={newUser.password}
                   onChange={e => setNewUser({...newUser, password: e.target.value})}
                 />
                 <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '6px' }}>
-                  Al iniciar sesión por primera vez, se le pedirá al usuario que establezca su propia contraseña definitiva.
+                  Al iniciar sesiÃ³n por primera vez, se le pedirÃ¡ al usuario que establezca su propia contraseÃ±a definitiva.
                 </p>
               </div>
 
@@ -227,7 +227,7 @@ export const UsersView = () => {
                   value={newUser.role}
                   onChange={e => setNewUser({...newUser, role: e.target.value})}
                 >
-                  <option value="Pendiente">Pendiente (Sin accesos)</option>
+                  
                   {roleDescriptions.map(r => (
                     <option key={r.role} value={r.role}>{r.role}</option>
                   ))}
@@ -258,3 +258,4 @@ export const UsersView = () => {
     </div>
   );
 };
+

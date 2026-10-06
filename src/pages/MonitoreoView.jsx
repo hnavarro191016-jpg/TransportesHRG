@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Truck, MapPinned, ArrowLeft } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -39,8 +39,21 @@ const getTotalDistance = (coords) => {
   return total;
 };
 
+
+const MapController = ({ panTarget }) => {
+  const map = useMap();
+  React.useEffect(() => {
+    if (panTarget) {
+      map.flyTo([panTarget.lat, panTarget.lng], 15, { duration: 1.5 });
+    }
+  }, [panTarget, map]);
+  return null;
+};
+
 export const MonitoreoView = () => {
-  const [activeView, setActiveView] = useState('menu'); // 'menu', 'live', 'history'
+  const [activeView, setActiveView] = useState('menu');
+  const [selectedLiveTruck, setSelectedLiveTruck] = useState(null);
+  const [panTarget, setPanTarget] = useState(null); // 'menu', 'live', 'history'
   const [isFullScreen, setIsFullScreen] = useState(false);
   
   const [locations, setLocations] = useState([]);
@@ -105,7 +118,8 @@ export const MonitoreoView = () => {
 
         if (histData) {
           const histGrouped = {};
-          histData.forEach(row => {
+          const validHistData = histData.filter(r => r.latitude !== 0 && r.longitude !== 0 && Math.abs(r.latitude) > 1);
+          validHistData.forEach(row => {
              if (!histGrouped[row.telegram_id]) histGrouped[row.telegram_id] = [];
              histGrouped[row.telegram_id].push({
                lat: row.latitude, 
@@ -147,8 +161,8 @@ export const MonitoreoView = () => {
   }, [dateFilter, startTime, endTime, activeView]);
 
   const uniqueOperators = useMemo(() => {
-    return Array.from(new Set(locations.map(loc => loc.telegram_id))).map(tid => {
-      const loc = locations.find(l => l.telegram_id === tid);
+    return Array.from(new Set(validLocations.map(loc => loc.telegram_id))).map(tid => {
+      const loc = validLocations.find(l => l.telegram_id === tid);
       return {
         id: tid,
         name: loc.driver_name || 'Desconocido',
@@ -157,12 +171,14 @@ export const MonitoreoView = () => {
     });
   }, [locations]);
 
+  const validLocations = locations.filter(l => l.latitude !== 0 && l.longitude !== 0 && Math.abs(l.latitude) > 1);
+
   const distances = useMemo(() => {
     const list = [];
     Object.entries(history).forEach(([tid, trips]) => {
       if (operatorFilter !== 'ALL' && operatorFilter !== tid) return;
 
-      const unit = locations.find(loc => loc.telegram_id === tid);
+      const unit = validLocations.find(loc => loc.telegram_id === tid);
       const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocida';
       
       let totalDistance = 0;
@@ -277,24 +293,36 @@ export const MonitoreoView = () => {
             </button>
           )}
           <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
-              <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-              {distances.map(driver => (
-                 driver.trips.map(trip => (
-                   <Polyline key={"live-hist-line-" + trip.id} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={8} dashArray="8, 8" />
-                 ))
+                <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <MapController panTarget={panTarget} />
+                
+                {distances.map(driver => {
+                   if (!selectedLiveTruck) return null; // SOLO MOSTRAR SI HAY SELECCIONADO
+                   if (selectedLiveTruck && driver.tid !== selectedLiveTruck) return null;
+                   return driver.trips.map(trip => (
+                     <Polyline key={"live-hist-line-" + trip.id} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={8} dashArray="8, 8" />
+                   ));
+                })}
+  
+                {validLocations.map((loc) => (
+                <Marker 
+                  key={"live-" + loc.telegram_id} 
+                  position={[loc.latitude, loc.longitude]} 
+                  icon={getTruckIcon(loc.last_updated)}
+                  eventHandlers={{
+                    click: () => setSelectedLiveTruck(loc.telegram_id === selectedLiveTruck ? null : loc.telegram_id),
+                    dblclick: () => setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() })
+                  }}
+                >
+                  <Popup>
+                    <strong>Unidad: {loc.unit_id || 'Sin Asignar'}</strong><br/>
+                    Operador: {loc.driver_name || 'Desconocido'}<br/>
+                    Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}<br/>
+                    <em style={{fontSize: '11px', color: '#64748b'}}>Doble click al icono para acercar</em>
+                  </Popup>
+                </Marker>
               ))}
-
-              {locations.map((loc) => (
-              <Marker key={`live-${loc.telegram_id}`} position={[loc.latitude, loc.longitude]} icon={getTruckIcon(loc.last_updated)}>
-                <Popup>
-                  <strong>Unidad: {loc.unit_id || 'Sin Asignar'}</strong><br/>
-                  Operador: {loc.driver_name || 'Desconocido'}<br/>
-                  Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+            </MapContainer>
         </div>
         <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }`}</style>
       </div>

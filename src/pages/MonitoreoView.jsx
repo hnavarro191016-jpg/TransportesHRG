@@ -167,8 +167,8 @@ export const MonitoreoView = () => {
       const loc = validLocations.find(l => l.telegram_id === tid);
       return {
         id: tid,
-        name: loc.driver_name || 'Desconocido
-        unit: loc.unit_id || 'Sin Asignar'
+        name: loc.driver_name || 'Desconocido',
+          unit: loc.unit_id || 'Sin Asignar'
       };
     });
   }, [locations]);
@@ -179,9 +179,9 @@ export const MonitoreoView = () => {
       if (operatorFilter !== 'ALL' && operatorFilter !== tid) return;
 
       const unit = validLocations.find(loc => loc.telegram_id === tid);
-      const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocido
-      
-      let totalDistance = 0;
+      const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocida';
+        
+        let totalDistance = 0;
       const parsedTrips = trips.map((trip, idx) => {
           const coords = trip.map(p => [p.lat, p.lng]);
           const distance = getTotalDistance(coords);
@@ -340,7 +340,7 @@ export const MonitoreoView = () => {
                 >
                   <Popup>
                     <strong>Unidad: {loc.unit_id || 'Sin Asignar'}</strong><br/>
-                    Operador: {loc.driver_name || 'Desconocido
+                    Operador: {loc.driver_name || 'Desconocido'}<br/>
                     Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}<br/>
                     <em style={{fontSize: '11px', color: '#64748b'}}>Doble click al icono para acercar</em>
                   </Popup>
@@ -459,6 +459,9 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
+
+
 
 
 

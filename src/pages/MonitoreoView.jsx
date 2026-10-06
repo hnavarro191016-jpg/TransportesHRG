@@ -118,7 +118,7 @@ export const MonitoreoView = () => {
 
         if (histData) {
           const histGrouped = {};
-          const validHistData = histData.filter(r => r.latitude > 14 && r.latitude < 33 && r.longitude < -86 && r.longitude > -119);
+          const validHistData = histData.filter(r => { const lat = parseFloat(r.latitude); const lng = parseFloat(r.longitude); return lat > 14 && lat < 33 && lng < -86 && lng > -119; });
           validHistData.forEach(row => {
              if (!histGrouped[row.telegram_id]) histGrouped[row.telegram_id] = [];
              histGrouped[row.telegram_id].push({
@@ -160,7 +160,7 @@ export const MonitoreoView = () => {
     fetchHistory();
   }, [dateFilter, startTime, endTime, activeView]);
 
-  const validLocations = locations.filter(l => l.latitude > 14 && l.latitude < 33 && l.longitude < -86 && l.longitude > -119);
+  const validLocations = locations.filter(l => { const lat = parseFloat(l.latitude); const lng = parseFloat(l.longitude); return lat > 14 && lat < 33 && lng < -86 && lng > -119; });
 
   const uniqueOperators = useMemo(() => {
     return Array.from(new Set(validLocations.map(loc => loc.telegram_id))).map(tid => {
@@ -435,6 +435,7 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 
 
 

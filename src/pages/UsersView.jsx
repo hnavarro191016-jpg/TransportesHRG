@@ -19,7 +19,8 @@ export const UsersView = () => {
     { role: 'Encargado de almacén', desc: 'Gestión de productos, entradas, salidas, transferencias, conteos físicos y reportes.' },
     { role: 'Compras', desc: 'Administración de proveedores, registro de ordenes de compra y entradas.' },
     { role: 'Mecánico', desc: 'Consulta de refacciones, catálogo de flota y apertura/cierre de órdenes de trabajo (OT).' },
-    { role: 'Gerencia', desc: 'Acceso de lectura a Dashboard de indicadores, alertas y reportes financieros.' }
+    { role: 'Gerencia', desc: 'Acceso de lectura a Dashboard de indicadores, alertas y reportes financieros.' },
+    { role: 'Monitoreo', desc: 'Acceso exclusivo al submódulo de rastreo GPS e historial de rutas.' }
   ];
 
   if (activeRole !== 'Administrador') {

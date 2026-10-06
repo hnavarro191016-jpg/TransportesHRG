@@ -79,7 +79,7 @@ export const ModuleHubView = ({ setActiveModule }) => {
       description: 'Rastreo GPS en vivo',
       icon: <MapPin size={48} />,
       color: '#14b8a6', // Teal
-      allowedRoles: ['Administrador', 'Gerencia']
+      allowedRoles: ['Administrador', 'Gerencia', 'Monitoreo']
     },
     {
       id: 'administracion',

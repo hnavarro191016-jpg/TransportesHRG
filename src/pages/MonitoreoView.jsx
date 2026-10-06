@@ -160,6 +160,8 @@ export const MonitoreoView = () => {
     fetchHistory();
   }, [dateFilter, startTime, endTime, activeView]);
 
+  const validLocations = locations.filter(l => l.latitude !== 0 && l.longitude !== 0 && Math.abs(l.latitude) > 1);
+
   const uniqueOperators = useMemo(() => {
     return Array.from(new Set(validLocations.map(loc => loc.telegram_id))).map(tid => {
       const loc = validLocations.find(l => l.telegram_id === tid);
@@ -170,8 +172,6 @@ export const MonitoreoView = () => {
       };
     });
   }, [locations]);
-
-  const validLocations = locations.filter(l => l.latitude !== 0 && l.longitude !== 0 && Math.abs(l.latitude) > 1);
 
   const distances = useMemo(() => {
     const list = [];
@@ -435,6 +435,7 @@ export const MonitoreoView = () => {
 
   return null;
 };
+
 
 
 

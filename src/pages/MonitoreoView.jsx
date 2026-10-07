@@ -40,6 +40,17 @@ const getTotalDistance = (coords) => {
 };
 
 
+const ResizeController = ({ isFullScreen }) => {
+  const map = useMap();
+  React.useEffect(() => {
+    // Wait a brief moment for the container's CSS to finish transitioning/updating
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+  }, [isFullScreen, map]);
+  return null;
+};
+
 const MapController = ({ panTarget }) => {
   const map = useMap();
   React.useEffect(() => {
@@ -357,6 +368,7 @@ export const MonitoreoView = () => {
             </button>
           )}
           <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
+                <ResizeController isFullScreen={isFullScreen} />
                 <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <MapController panTarget={panTarget} />
                 
@@ -382,7 +394,7 @@ export const MonitoreoView = () => {
                         dblclick: () => setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() })
                       }}
                     >
-                      <Popup>
+                      <Popup autoPan={false}>
                         <div style={{ minWidth: '200px' }}>
                           <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
                             Unidad: <strong>{operatorData.unit}</strong>
@@ -501,6 +513,7 @@ export const MonitoreoView = () => {
             </button>
           )}
           <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
+              <ResizeController isFullScreen={isFullScreen} />
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             
             {distances.map(driver => (

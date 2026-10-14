@@ -43,10 +43,27 @@ const getTotalDistance = (coords) => {
 const ResizeController = ({ isFullScreen }) => {
   const map = useMap();
   React.useEffect(() => {
-    // Wait a brief moment for the container's CSS to finish transitioning/updating
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
+    const handleResize = () => {
+      try {
+        if (map) map.invalidateSize();
+      } catch (e) {
+        // ignore if unmounted
+      }
+    };
+
+    handleResize();
+    const t1 = setTimeout(handleResize, 100);
+    const t2 = setTimeout(handleResize, 300);
+    const t3 = setTimeout(handleResize, 600);
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [isFullScreen, map]);
   return null;
 };
@@ -57,10 +74,14 @@ const getTripBounds = (coords) => {
   let minLng = coords[0][1], maxLng = coords[0][1];
   for (let i = 1; i < coords.length; i++) {
     const [lat, lng] = coords[i];
+    if (isNaN(lat) || isNaN(lng)) continue;
     if (lat < minLat) minLat = lat;
     if (lat > maxLat) maxLat = lat;
     if (lng < minLng) minLng = lng;
     if (lng > maxLng) maxLng = lng;
+  }
+  if (minLat === maxLat && minLng === maxLng) {
+    return [[minLat - 0.005, minLng - 0.005], [maxLat + 0.005, maxLng + 0.005]];
   }
   return [[minLat, minLng], [maxLat, maxLng]];
 };
@@ -68,11 +89,15 @@ const getTripBounds = (coords) => {
 const MapController = ({ panTarget }) => {
   const map = useMap();
   React.useEffect(() => {
-    if (panTarget) {
-      if (panTarget.bounds) {
-        map.fitBounds(panTarget.bounds, { padding: [40, 40], maxZoom: 16 });
-      } else if (panTarget.lat && panTarget.lng) {
-        map.flyTo([panTarget.lat, panTarget.lng], 15, { duration: 1.5 });
+    if (panTarget && map) {
+      try {
+        if (panTarget.bounds && Array.isArray(panTarget.bounds) && panTarget.bounds.length === 2) {
+          map.fitBounds(panTarget.bounds, { padding: [40, 40], maxZoom: 15 });
+        } else if (panTarget.lat && panTarget.lng && !isNaN(panTarget.lat) && !isNaN(panTarget.lng)) {
+          map.flyTo([panTarget.lat, panTarget.lng], 15, { duration: 1.5 });
+        }
+      } catch (err) {
+        console.warn('MapController error:', err);
       }
     }
   }, [panTarget, map]);
@@ -312,6 +337,16 @@ export const MonitoreoView = () => {
     return allDistances.filter(d => String(d.tid) === String(operatorFilter));
   }, [allDistances, operatorFilter]);
 
+  useEffect(() => {
+    if (activeView === 'history' && distances.length > 0) {
+      const allCoords = distances.flatMap(d => (d.trips || []).flatMap(t => t.coords));
+      if (allCoords.length >= 2) {
+        const b = getTripBounds(allCoords);
+        if (b) setPanTarget({ bounds: b, ts: Date.now() });
+      }
+    }
+  }, [distances, activeView]);
+
 
   // ==========================================
   // VISTA DE MENÚ PRINCIPAL
@@ -420,7 +455,7 @@ export const MonitoreoView = () => {
           </button>
         </div>
         
-        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, backgroundColor: '#f8fafc' } : { height: '600px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', marginTop: '16px', position: 'relative' }}>
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: '#f8fafc' } : { height: '600px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', marginTop: '16px', position: 'relative' }}>
           {isFullScreen && (
             <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa
@@ -514,7 +549,7 @@ export const MonitoreoView = () => {
             );
           })()}
 
-          <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
+          <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', minHeight: '600px', backgroundColor: '#aad3df' }}>
                 <ResizeController isFullScreen={isFullScreen} />
                 <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <MapController panTarget={panTarget} />
@@ -574,7 +609,7 @@ export const MonitoreoView = () => {
   // ==========================================
   if (activeView === 'history') {
     return (
-      <div style={{ padding: '12px 16px', minHeight: 'calc(100dvh - 90px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' }}>
         
         {/* Barra superior compacta en 2 columnas: Izquierda (Título + Filtros) y Derecha (Tablita de Rutas) */}
         <div style={{ 
@@ -744,44 +779,43 @@ export const MonitoreoView = () => {
         </div>
         
         {/* Contenedor del Mapa - Elevado con máximo espacio visual */}
-        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, backgroundColor: '#f8fafc' } : { flex: 1, minHeight: '580px', height: 'calc(100dvh - 210px)', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative' }}>
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: '#f8fafc' } : { height: 'calc(100vh - 200px)', minHeight: '620px', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative' }}>
           {isFullScreen && (
             <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa
             </button>
           )}
-          <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
+          <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', minHeight: '620px', backgroundColor: '#aad3df' }}>
               <ResizeController isFullScreen={isFullScreen} />
-              <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <MapController panTarget={panTarget} />
             
-            {distances.map(driver => (
-               driver.trips.map(trip => {
-                 if (selectedTripId && trip.id !== selectedTripId) return null;
-                 const isSelected = selectedTripId === trip.id;
-                 return (
-                   <React.Fragment key={`hist-group-${trip.id}`}>
-                     {isSelected && (
-                       <Polyline 
-                         positions={trip.coords} 
-                         color="#1e293b" 
-                         weight={8} 
-                         opacity={0.3} 
-                         smoothFactor={1} 
-                       />
-                     )}
-                     <Polyline 
-                       key={`hist-line-${trip.id}`} 
-                       positions={trip.coords} 
-                       color={trip.colors} 
-                       weight={isSelected ? 5 : 4} 
-                       opacity={0.85} 
-                       smoothFactor={1} 
-                     />
-                   </React.Fragment>
-                 );
-               })
-            ))}
+            {distances.flatMap(driver => driver.trips || []).map(trip => {
+              if (selectedTripId && trip.id !== selectedTripId) return null;
+              if (!trip.coords || trip.coords.length < 2) return null;
+              const isSelected = selectedTripId === trip.id;
+              return (
+                <React.Fragment key={`hist-group-${trip.id}`}>
+                  {isSelected && (
+                    <Polyline 
+                      positions={trip.coords} 
+                      color="#1e293b" 
+                      weight={8} 
+                      opacity={0.3} 
+                      smoothFactor={1} 
+                    />
+                  )}
+                  <Polyline 
+                    key={`hist-line-${trip.id}`} 
+                    positions={trip.coords} 
+                    color={trip.colors || '#2563eb'} 
+                    weight={isSelected ? 5 : 4} 
+                    opacity={0.85} 
+                    smoothFactor={1} 
+                  />
+                </React.Fragment>
+              );
+            })}
           </MapContainer>
         </div>
       </div>

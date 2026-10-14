@@ -71,8 +71,15 @@ export const MonitoreoView = () => {
   const [history, setHistory] = useState({});
   const [, setTick] = useState(0);
   
-  const todayDateStr = new Date().toISOString().split('T')[0];
-  const [dateFilter, setDateFilter] = useState(todayDateStr);
+  const getLocalDateStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [dateFilter, setDateFilter] = useState(getLocalDateStr());
   const [startTime, setStartTime] = useState('00:00');
   const [endTime, setEndTime] = useState('23:59');
   const [operatorFilter, setOperatorFilter] = useState('ALL');
@@ -94,8 +101,9 @@ export const MonitoreoView = () => {
     const subscription = supabase
       .channel('romo_live_tracking_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'romo_live_tracking' }, payload => {
+        if (!payload.new) return;
         setLocations(current => {
-          const index = current.findIndex(loc => loc.telegram_id === payload.new.telegram_id);
+          const index = current.findIndex(loc => String(loc.telegram_id) === String(payload.new.telegram_id));
           if (index !== -1) {
             const updated = [...current];
             updated[index] = payload.new;
@@ -103,6 +111,34 @@ export const MonitoreoView = () => {
           }
           return [...current, payload.new];
         });
+
+        // Actualizar la estela viva en tiempo real si el camión envía nuevas coordenadas
+        if (payload.new.latitude && payload.new.longitude) {
+          const tid = String(payload.new.telegram_id);
+          const newPoint = {
+            lat: Number(payload.new.latitude),
+            lng: Number(payload.new.longitude),
+            time: new Date(payload.new.last_updated || Date.now())
+          };
+          setHistory(prev => {
+            const prevTrips = prev[tid] ? [...prev[tid]] : [];
+            if (prevTrips.length === 0) {
+              return { ...prev, [tid]: [[newPoint]] };
+            }
+            const updatedTrips = [...prevTrips];
+            const lastTrip = [...updatedTrips[updatedTrips.length - 1]];
+            const lastPoint = lastTrip[lastTrip.length - 1];
+            if (!lastPoint || (newPoint.time.getTime() - lastPoint.time.getTime() > 30 * 60 * 1000)) {
+              updatedTrips.push([newPoint]);
+            } else {
+              if (lastPoint.lat !== newPoint.lat || lastPoint.lng !== newPoint.lng) {
+                lastTrip.push(newPoint);
+                updatedTrips[updatedTrips.length - 1] = lastTrip;
+              }
+            }
+            return { ...prev, [tid]: updatedTrips };
+          });
+        }
       })
       .subscribe();
 
@@ -224,34 +260,38 @@ export const MonitoreoView = () => {
     });
   }, [locations, operatorDetails]);
 
-  const distances = useMemo(() => {
+  const allDistances = useMemo(() => {
     const list = [];
     Object.entries(history).forEach(([tid, trips]) => {
-      if (operatorFilter !== 'ALL' && operatorFilter !== tid) return;
-
-      const unit = validLocations.find(loc => loc.telegram_id === tid);
+      const tidStr = String(tid);
+      const unit = validLocations.find(loc => String(loc.telegram_id) === tidStr);
       const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocida';
         
-        let totalDistance = 0;
+      let totalDistance = 0;
       const parsedTrips = trips.map((trip, idx) => {
-          const coords = trip.map(p => [p.lat, p.lng]);
+          const coords = trip.map(p => [Number(p.lat), Number(p.lng)]);
           const distance = getTotalDistance(coords);
           totalDistance += distance;
           return {
-             id: `${tid}-trip-${idx}`,
+             id: `${tidStr}-trip-${idx}`,
              num: idx + 1,
              startTime: trip[0].time,
              endTime: trip[trip.length-1].time,
              distance,
              coords,
-             colors: ['#dc2626', '#2563eb', '#16a34a', '#d97706', '#9333ea'][idx % 5] // Colores distintos para cada tramo
+             colors: ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#dc2626'][idx % 5]
           };
       });
 
-      list.push({ tid, unitName, totalDistance, trips: parsedTrips });
+      list.push({ tid: tidStr, unitName, totalDistance, trips: parsedTrips });
     });
     return list;
-  }, [history, locations, operatorFilter]);
+  }, [history, locations]);
+
+  const distances = useMemo(() => {
+    if (operatorFilter === 'ALL') return allDistances;
+    return allDistances.filter(d => String(d.tid) === String(operatorFilter));
+  }, [allDistances, operatorFilter]);
 
 
   // ==========================================
@@ -343,8 +383,8 @@ export const MonitoreoView = () => {
                     setSelectedLiveTruck(null);
                     return;
                   }
-                  setSelectedLiveTruck(tid);
-                  const loc = validLocations.find(l => l.telegram_id === tid);
+                  setSelectedLiveTruck(String(tid));
+                  const loc = validLocations.find(l => String(l.telegram_id) === String(tid));
                   if (loc) {
                     setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() });
                   }
@@ -361,58 +401,146 @@ export const MonitoreoView = () => {
           </button>
         </div>
         
-        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, backgroundColor: '#f8fafc' } : { height: '600px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', marginTop: '16px' }}>
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, backgroundColor: '#f8fafc' } : { height: '600px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', marginTop: '16px', position: 'relative' }}>
           {isFullScreen && (
             <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa
             </button>
           )}
+
+          {/* Tarjeta flotante en la esquina superior izquierda con la información del operador */}
+          {selectedLiveTruck && (() => {
+            const activeTruck = validLocations.find(l => String(l.telegram_id) === String(selectedLiveTruck));
+            const activeOp = uniqueOperators.find(op => String(op.id) === String(selectedLiveTruck)) || (activeTruck ? { unit: activeTruck.unit_id || 'Sin Asignar', name: activeTruck.driver_name || 'Desconocido', raw: null } : null);
+            const activeDist = allDistances.find(d => String(d.tid) === String(selectedLiveTruck));
+            const totalKmToday = activeDist ? activeDist.totalDistance.toFixed(2) : '0.00';
+            const isOnline = activeTruck && (new Date() - new Date(activeTruck.last_updated)) <= 180000;
+
+            if (!activeOp) return null;
+
+            return (
+              <div style={{
+                position: 'absolute',
+                top: '16px',
+                left: '60px',
+                zIndex: 1000,
+                backgroundColor: 'rgba(255, 255, 255, 0.96)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                border: '1px solid #cbd5e1',
+                padding: '16px',
+                width: '320px',
+                maxWidth: 'calc(100% - 80px)',
+                pointerEvents: 'auto'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      backgroundColor: isOnline ? '#16a34a' : '#64748b',
+                      boxShadow: isOnline ? '0 0 6px #16a34a' : 'none'
+                    }} />
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#0f172a' }}>
+                      Unidad: {activeOp.unit}
+                    </h3>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedLiveTruck(null)}
+                    style={{ 
+                      border: 'none', 
+                      background: '#f1f5f9', 
+                      cursor: 'pointer', 
+                      color: '#64748b', 
+                      width: '24px', 
+                      height: '24px', 
+                      borderRadius: '50%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      fontSize: '14px', 
+                      fontWeight: 'bold' 
+                    }}
+                    title="Cerrar panel"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', color: '#334155' }}>
+                  <div><strong style={{ color: '#64748b' }}>Operador:</strong> <span style={{ fontWeight: 600 }}>{activeOp.name}</span></div>
+                  {activeOp.raw?.Telefono && <div><strong style={{ color: '#64748b' }}>Teléfono:</strong> {activeOp.raw.Telefono}</div>}
+                  {activeOp.raw?.Empresa && <div><strong style={{ color: '#64748b' }}>Empresa:</strong> {activeOp.raw.Empresa}</div>}
+                  {activeOp.raw?.status && <div><strong style={{ color: '#64748b' }}>Estatus:</strong> {activeOp.raw.status}</div>}
+                  {activeOp.raw?.licenciaConductor && <div><strong style={{ color: '#64748b' }}>Licencia:</strong> {activeOp.raw.licenciaConductor}</div>}
+                  
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Recorrido hoy</span>
+                      <strong style={{ fontSize: '15px', color: '#2563eb' }}>{totalKmToday} km</strong>
+                    </div>
+                    {activeTruck && (
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Última señal</span>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                          {new Date(activeTruck.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
                 <ResizeController isFullScreen={isFullScreen} />
                 <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <MapController panTarget={panTarget} />
                 
-                {distances.map(driver => {
-                   if (!selectedLiveTruck) return null; // SOLO MOSTRAR SI HAY SELECCIONADO
-                   if (selectedLiveTruck && driver.tid !== selectedLiveTruck) return null;
-                   return driver.trips.map(trip => (
-                     <Polyline key={"live-hist-line-" + trip.id} positions={trip.coords} color={trip.colors} weight={4} opacity={0.6} smoothFactor={1} dashArray="8, 8" />
-                   ));
-                })}
+                {/* Estela del recorrido para el operador seleccionado */}
+                {selectedLiveTruck && (() => {
+                  const driverData = allDistances.find(d => String(d.tid) === String(selectedLiveTruck));
+                  const currentLoc = validLocations.find(l => String(l.telegram_id) === String(selectedLiveTruck));
+                  if (!driverData || !driverData.trips || driverData.trips.length === 0) return null;
+
+                  return driverData.trips.map((trip, idx) => {
+                    let coords = trip.coords;
+                    if (idx === driverData.trips.length - 1 && currentLoc) {
+                      const lastPoint = coords[coords.length - 1];
+                      if (!lastPoint || (lastPoint[0] !== currentLoc.latitude || lastPoint[1] !== currentLoc.longitude)) {
+                        coords = [...coords, [currentLoc.latitude, currentLoc.longitude]];
+                      }
+                    }
+                    if (coords.length < 2) return null;
+
+                    return (
+                      <React.Fragment key={`live-hist-group-${trip.id}`}>
+                        {/* Contorno exterior para resaltar sobre el mapa */}
+                        <Polyline positions={coords} color="#1d4ed8" weight={8} opacity={0.3} smoothFactor={1} />
+                        {/* Trazo principal azul vibrante */}
+                        <Polyline positions={coords} color="#2563eb" weight={4} opacity={0.9} smoothFactor={1} />
+                      </React.Fragment>
+                    );
+                  });
+                })()}
   
-                {validLocations.filter(loc => !selectedLiveTruck || loc.telegram_id === selectedLiveTruck).map((loc) => {
-                  // Buscar los detalles enriquecidos (Google Sheets) en uniqueOperators
-                  const operatorData = uniqueOperators.find(op => op.id === loc.telegram_id) || { unit: loc.unit_id || 'Sin Asignar', name: loc.driver_name || 'Desconocido' };
-                  
+                {validLocations.filter(loc => !selectedLiveTruck || String(loc.telegram_id) === String(selectedLiveTruck)).map((loc) => {
                   return (
                     <Marker 
                       key={"live-" + loc.telegram_id} 
                       position={[loc.latitude, loc.longitude]} 
                       icon={getTruckIcon(loc.last_updated)}
                       eventHandlers={{
-                        click: () => setSelectedLiveTruck(loc.telegram_id === selectedLiveTruck ? null : loc.telegram_id),
+                        click: () => {
+                          const tidStr = String(loc.telegram_id);
+                          setSelectedLiveTruck(prev => prev === tidStr ? null : tidStr);
+                        },
                         dblclick: () => setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() })
                       }}
-                    >
-                      <Popup autoPan={false}>
-                        <div style={{ minWidth: '200px' }}>
-                          <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
-                            Unidad: <strong>{operatorData.unit}</strong>
-                          </h3>
-                          <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
-                            <div><strong>Operador:</strong> {operatorData.name}</div>
-                            {operatorData.raw?.Telefono && <div><strong>Teléfono:</strong> {operatorData.raw.Telefono}</div>}
-                            {operatorData.raw?.Empresa && <div><strong>Empresa:</strong> {operatorData.raw.Empresa}</div>}
-                            {operatorData.raw?.status && <div><strong>Estatus:</strong> {operatorData.raw.status}</div>}
-                            {operatorData.raw?.licenciaConductor && <div><strong>Licencia:</strong> {operatorData.raw.licenciaConductor}</div>}
-                            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0', color: '#64748b', fontSize: '11px' }}>
-                              Actualizado: {new Date(loc.last_updated).toLocaleTimeString()}
-                              <br/><em>Doble click al icono para acercar</em>
-                            </div>
-                          </div>
-                        </div>
-                      </Popup>
-                    </Marker>
+                    />
                   );
                 })}
             </MapContainer>

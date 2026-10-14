@@ -281,35 +281,69 @@ export const MonitoreoView = () => {
       }
     };
 
-    validLocations.forEach(loc => {
-      if (!operatorDetails[loc.telegram_id]) {
+    const allTids = Array.from(new Set([
+      ...validLocations.map(loc => String(loc.telegram_id)),
+      ...Object.keys(history).map(String)
+    ]));
+
+    allTids.forEach(tid => {
+      if (!operatorDetails[tid]) {
         // Para evitar llamadas repetidas mientras se resuelve la promesa, lo marcamos como 'cargando'
-        setOperatorDetails(prev => ({ ...prev, [loc.telegram_id]: { name: 'Cargando...', unit: '...', raw: null } }));
-        fetchOperatorData(loc.telegram_id);
+        setOperatorDetails(prev => ({ ...prev, [tid]: { name: 'Cargando...', unit: '...', raw: null } }));
+        fetchOperatorData(tid);
       }
     });
-  }, [validLocations, operatorDetails]);
+  }, [validLocations, history, operatorDetails]);
 
   const uniqueOperators = useMemo(() => {
-    return Array.from(new Set(validLocations.map(loc => loc.telegram_id))).map(tid => {
-      const loc = validLocations.find(l => l.telegram_id === tid);
+    const allTids = Array.from(new Set([
+      ...validLocations.map(loc => String(loc.telegram_id)),
+      ...Object.keys(history).map(String)
+    ]));
+
+    return allTids.map(tid => {
+      const loc = validLocations.find(l => String(l.telegram_id) === tid);
       const details = operatorDetails[tid] || {};
+      
+      let name = 'Desconocido';
+      if (details.name && details.name !== 'Desconocido' && details.name !== 'Cargando...') {
+        name = details.name;
+      } else if (loc?.driver_name && !loc.driver_name.includes('http')) {
+        name = loc.driver_name;
+      } else if (details.name) {
+        name = details.name;
+      } else {
+        name = `Operador ${tid.slice(-4)}`;
+      }
+
+      const unit = (details.unit && details.unit !== 'Sin Asignar' && details.unit !== '...') 
+        ? details.unit 
+        : (loc?.unit_id || '');
+
       return {
         id: tid,
-        // Priorizamos lo que viene de Google Sheets, si no hay, intentamos lo de la base de datos
-        name: (details.name !== 'Desconocido' && details.name !== 'Cargando...') ? details.name : (loc.driver_name || details.name || 'Desconocido'),
-        unit: (details.unit !== 'Sin Asignar' && details.unit !== '...') ? details.unit : (loc.unit_id || details.unit || 'Sin Asignar'),
+        name,
+        unit,
         raw: details.raw || null
       };
-    });
-  }, [locations, operatorDetails]);
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  }, [validLocations, history, operatorDetails]);
 
   const allDistances = useMemo(() => {
     const list = [];
     Object.entries(history).forEach(([tid, trips]) => {
       const tidStr = String(tid);
-      const unit = validLocations.find(loc => String(loc.telegram_id) === tidStr);
-      const unitName = unit ? (unit.unit_id || 'Sin Asignar') : 'Desconocida';
+      const op = uniqueOperators.find(o => String(o.id) === tidStr);
+      const loc = validLocations.find(l => String(l.telegram_id) === tidStr);
+      const details = operatorDetails[tidStr] || {};
+      
+      const operatorName = (details.name && details.name !== 'Desconocido' && details.name !== 'Cargando...') 
+        ? details.name 
+        : (op?.name && op.name !== 'Desconocido' && op.name !== 'Cargando...'
+          ? op.name
+          : (loc?.driver_name && !loc.driver_name.includes('http') ? loc.driver_name : `Operador ${tidStr.slice(-4)}`));
+
+      const unitName = (op?.unit && op.unit !== 'Sin Asignar') ? op.unit : (loc?.unit_id || null);
         
       let totalDistance = 0;
       const parsedTrips = trips.map((trip, idx) => {
@@ -327,10 +361,16 @@ export const MonitoreoView = () => {
           };
       });
 
-      list.push({ tid: tidStr, unitName, totalDistance, trips: parsedTrips });
+      list.push({ 
+        tid: tidStr, 
+        operatorName, 
+        unitName, 
+        totalDistance, 
+        trips: parsedTrips 
+      });
     });
     return list;
-  }, [history, locations]);
+  }, [history, validLocations, uniqueOperators, operatorDetails]);
 
   const distances = useMemo(() => {
     if (operatorFilter === 'ALL') return allDistances;
@@ -614,91 +654,108 @@ export const MonitoreoView = () => {
         {/* Barra superior compacta en 2 columnas: Izquierda (Título + Filtros) y Derecha (Tablita de Rutas) */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: distances.length > 0 ? 'minmax(340px, 460px) 1fr' : '1fr', 
-          gap: '16px', 
+          gridTemplateColumns: distances.length > 0 ? 'auto 1fr' : '1fr', 
+          gap: '12px', 
           marginBottom: '10px', 
           alignItems: 'stretch' 
         }}>
           
           {/* Columna Izquierda: Botones de navegación y Filtros compactos */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '345px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button 
                 onClick={() => setActiveView('menu')} 
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', color: '#475569', fontSize: '13px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', color: '#475569', fontSize: '12px', flexShrink: 0 }}
               >
-                <ArrowLeft size={16} /> Volver
+                <ArrowLeft size={14} /> Volver
               </button>
-              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>Historial de Rutas</h2>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap' }}>Historial</h2>
               <button 
                 onClick={() => setIsFullScreen(true)} 
-                style={{ marginLeft: 'auto', padding: '6px 14px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                style={{ marginLeft: 'auto', padding: '5px 10px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 Pantalla Completa
               </button>
             </div>
             
             {/* Filtros ultra compactos */}
-            <div style={{ backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontWeight: '600', color: '#475569', fontSize: '12px', minWidth: '60px' }}>Operador:</label>
+            <div style={{ backgroundColor: '#f8fafc', padding: '6px 8px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ fontWeight: '600', color: '#475569', fontSize: '11px', width: '50px', flexShrink: 0 }}>Operador:</label>
                 <select 
                   value={operatorFilter} 
                   onChange={(e) => {
                     setOperatorFilter(e.target.value);
                     setSelectedTripId(null);
                   }} 
-                  style={{ flex: 1, padding: '4px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '12px', fontWeight: '500' }}
+                  style={{ flex: 1, padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '11px', fontWeight: '500', minWidth: 0 }}
                 >
-                  <option value="ALL">Todos los operadores</option>
+                  <option value="ALL">Todos los operadores ({uniqueOperators.length})</option>
                   {uniqueOperators.map(op => (
-                    <option key={op.id} value={op.id}>{op.name} ({op.unit})</option>
+                    <option key={op.id} value={op.id}>
+                      {op.name}{op.unit && op.unit !== 'Sin Asignar' ? ` (${op.unit})` : ''}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                <label style={{ fontWeight: '600', color: '#475569', fontSize: '12px', minWidth: '60px' }}>Tiempo:</label>
-                <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} style={{ padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '12px' }} />
-                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={{ padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '12px' }} />
-                <span style={{ color: '#64748b', fontSize: '12px' }}>a</span>
-                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={{ padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '12px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
+                <label style={{ fontWeight: '600', color: '#475569', fontSize: '11px', width: '50px', flexShrink: 0 }}>Tiempo:</label>
+                <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} style={{ padding: '2px 4px', borderRadius: '5px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '11px', width: '108px' }} />
+                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={{ padding: '2px 2px', borderRadius: '5px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '11px', width: '68px' }} />
+                <span style={{ color: '#94a3b8', fontSize: '11px' }}>-</span>
+                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={{ padding: '2px 2px', borderRadius: '5px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '11px', width: '68px' }} />
               </div>
             </div>
           </div>
 
           {/* Columna Derecha: Tablita de viajes arriba a la derecha */}
           {distances.length > 0 && (
-            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', minHeight: '90px' }}>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', minHeight: '85px', paddingBottom: '2px' }}>
               {distances.map(driver => (
-                <div key={driver.tid} style={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', flex: 1, minWidth: '340px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                  <div style={{ backgroundColor: '#f8fafc', padding: '6px 12px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <strong style={{ fontSize: '13px', color: '#0f172a' }}>{driver.unitName}</strong>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '12px' }}>Total: {driver.totalDistance.toFixed(2)} km</span>
+                <div key={driver.tid} style={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', flex: '0 0 auto', minWidth: '260px', maxWidth: '300px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: '#f8fafc', padding: '5px 8px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                    <strong 
+                      style={{ 
+                        fontSize: '11.5px', 
+                        color: '#0f172a', 
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis',
+                        maxWidth: '160px'
+                      }} 
+                      title={driver.operatorName}
+                    >
+                      {driver.operatorName}
+                    </strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                      <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        {driver.totalDistance.toFixed(2)} km
+                      </span>
                       {selectedTripId && (
                         <button 
                           onClick={() => setSelectedTripId(null)}
                           style={{
-                            padding: '2px 8px',
-                            fontSize: '11px',
+                            padding: '1px 5px',
+                            fontSize: '9.5px',
                             fontWeight: 'bold',
                             backgroundColor: '#e0e7ff',
                             color: '#2563eb',
                             border: '1px solid #bfdbfe',
                             borderRadius: '4px',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
                           }}
                         >
-                          👁️ Todas ({driver.trips.length})
+                          👁️ Todas
                         </button>
                       )}
                     </div>
                   </div>
                   
                   {/* Desglose de viajes */}
-                  <div style={{ padding: '4px 10px', overflowY: 'auto', maxHeight: '72px' }}>
-                    <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
+                  <div style={{ padding: '2px 8px', overflowY: 'auto', maxHeight: '68px' }}>
+                    <table style={{ width: '100%', fontSize: '10.5px', borderCollapse: 'collapse' }}>
                       <tbody>
                         {driver.trips.map(trip => {
                           const isSelected = selectedTripId === trip.id;
@@ -720,26 +777,26 @@ export const MonitoreoView = () => {
                                 cursor: 'pointer'
                               }}
                             >
-                              <td style={{ padding: '3px 2px' }}>
+                              <td style={{ padding: '2px 2px', width: '20px' }}>
                                 <span style={{ 
                                   backgroundColor: trip.colors, 
                                   color: 'white', 
-                                  padding: '1px 5px', 
+                                  padding: '1px 4px', 
                                   borderRadius: '3px', 
-                                  fontSize: '10px', 
+                                  fontSize: '9.5px', 
                                   fontWeight: 'bold',
                                   boxShadow: isSelected ? '0 0 0 2px #2563eb' : 'none'
                                 }}>
                                   #{trip.num}
                                 </span>
                               </td>
-                              <td style={{ padding: '3px 2px', fontSize: '11px', fontWeight: isSelected ? '600' : '400' }}>
+                              <td style={{ padding: '2px 4px', fontSize: '10px', fontWeight: isSelected ? '600' : '400', whiteSpace: 'nowrap' }}>
                                 {trip.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {trip.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                               </td>
-                              <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', color: isSelected ? '#2563eb' : '#0f172a', fontSize: '11px' }}>
+                              <td style={{ padding: '2px 4px', textAlign: 'right', fontWeight: '600', color: isSelected ? '#2563eb' : '#0f172a', fontSize: '10px', whiteSpace: 'nowrap' }}>
                                 {trip.distance.toFixed(2)} km
                               </td>
-                              <td style={{ padding: '3px 2px', textAlign: 'right' }}>
+                              <td style={{ padding: '2px 2px', textAlign: 'right', width: '54px' }}>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -752,18 +809,19 @@ export const MonitoreoView = () => {
                                     }
                                   }}
                                   style={{
-                                    padding: '2px 6px',
-                                    fontSize: '10px',
+                                    padding: '1px 5px',
+                                    fontSize: '9px',
                                     fontWeight: '600',
                                     borderRadius: '4px',
                                     cursor: 'pointer',
                                     border: '1px solid',
                                     backgroundColor: isSelected ? '#2563eb' : '#ffffff',
                                     color: isSelected ? '#ffffff' : '#475569',
-                                    borderColor: isSelected ? '#1d4ed8' : '#cbd5e1'
+                                    borderColor: isSelected ? '#1d4ed8' : '#cbd5e1',
+                                    whiteSpace: 'nowrap'
                                   }}
                                 >
-                                  {isSelected ? '✓ Mostrando' : 'Solo esta'}
+                                  {isSelected ? '✓ Activa' : 'Solo esta'}
                                 </button>
                               </td>
                             </tr>

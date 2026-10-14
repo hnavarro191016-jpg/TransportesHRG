@@ -51,11 +51,29 @@ const ResizeController = ({ isFullScreen }) => {
   return null;
 };
 
+const getTripBounds = (coords) => {
+  if (!coords || coords.length === 0) return null;
+  let minLat = coords[0][0], maxLat = coords[0][0];
+  let minLng = coords[0][1], maxLng = coords[0][1];
+  for (let i = 1; i < coords.length; i++) {
+    const [lat, lng] = coords[i];
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+  }
+  return [[minLat, minLng], [maxLat, maxLng]];
+};
+
 const MapController = ({ panTarget }) => {
   const map = useMap();
   React.useEffect(() => {
     if (panTarget) {
-      map.flyTo([panTarget.lat, panTarget.lng], 15, { duration: 1.5 });
+      if (panTarget.bounds) {
+        map.fitBounds(panTarget.bounds, { padding: [40, 40], maxZoom: 16 });
+      } else if (panTarget.lat && panTarget.lng) {
+        map.flyTo([panTarget.lat, panTarget.lng], 15, { duration: 1.5 });
+      }
     }
   }, [panTarget, map]);
   return null;
@@ -64,6 +82,7 @@ const MapController = ({ panTarget }) => {
 export const MonitoreoView = () => {
   const [activeView, setActiveView] = useState('menu');
   const [selectedLiveTruck, setSelectedLiveTruck] = useState(null);
+  const [selectedTripId, setSelectedTripId] = useState(null);
   const [panTarget, setPanTarget] = useState(null); // 'menu', 'live', 'history'
   const [isFullScreen, setIsFullScreen] = useState(false);
   
@@ -573,7 +592,14 @@ export const MonitoreoView = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <label style={{ fontWeight: '500', color: '#475569', fontSize: '14px' }}>Operador:</label>
-              <select value={operatorFilter} onChange={(e) => setOperatorFilter(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '14px' }}>
+              <select 
+                value={operatorFilter} 
+                onChange={(e) => {
+                  setOperatorFilter(e.target.value);
+                  setSelectedTripId(null);
+                }} 
+                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '14px' }}
+              >
                 <option value="ALL">Todos los operadores</option>
                 {uniqueOperators.map(op => (
                   <option key={op.id} value={op.id}>{op.name} ({op.unit})</option>
@@ -595,7 +621,7 @@ export const MonitoreoView = () => {
         {distances.length > 0 && (
           <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
             {distances.map(driver => (
-              <div key={driver.tid} style={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', minWidth: '350px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div key={driver.tid} style={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', minWidth: '400px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <strong style={{ fontSize: '16px' }}>{driver.unitName}</strong>
                   <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Total: {driver.totalDistance.toFixed(2)} km</span>
@@ -604,27 +630,112 @@ export const MonitoreoView = () => {
                 {/* Desglose de viajes (si es ALL solo muestra total, si es uno, muestra tabla) */}
                 {(operatorFilter !== 'ALL' || distances.length === 1) && (
                   <div style={{ padding: '12px 16px' }}>
-                    <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#64748b' }}>Se detectaron {driver.trips.length} viajes distintos hoy:</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                        Se detectaron {driver.trips.length} viajes distintos:
+                      </p>
+                      {selectedTripId && (
+                        <button 
+                          onClick={() => setSelectedTripId(null)}
+                          style={{
+                            padding: '3px 10px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            backgroundColor: '#e0e7ff',
+                            color: '#2563eb',
+                            border: '1px solid #bfdbfe',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          👁️ Ver todas las rutas
+                        </button>
+                      )}
+                    </div>
                     <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
-                          <th style={{ paddingBottom: '4px' }}>#</th>
-                          <th style={{ paddingBottom: '4px' }}>Inicio</th>
-                          <th style={{ paddingBottom: '4px' }}>Fin</th>
-                          <th style={{ paddingBottom: '4px', textAlign: 'right' }}>Distancia</th>
+                          <th style={{ paddingBottom: '6px' }}>#</th>
+                          <th style={{ paddingBottom: '6px' }}>Inicio</th>
+                          <th style={{ paddingBottom: '6px' }}>Fin</th>
+                          <th style={{ paddingBottom: '6px', textAlign: 'right' }}>Distancia</th>
+                          <th style={{ paddingBottom: '6px', textAlign: 'center' }}>Filtro</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {driver.trips.map(trip => (
-                          <tr key={trip.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '6px 0' }}>
-                              <span style={{ backgroundColor: trip.colors, color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>{trip.num}</span>
-                            </td>
-                            <td style={{ padding: '6px 0' }}>{trip.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                            <td style={{ padding: '6px 0' }}>{trip.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                            <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: '500' }}>{trip.distance.toFixed(2)} km</td>
-                          </tr>
-                        ))}
+                        {driver.trips.map(trip => {
+                          const isSelected = selectedTripId === trip.id;
+                          return (
+                            <tr 
+                              key={trip.id} 
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedTripId(null);
+                                } else {
+                                  setSelectedTripId(trip.id);
+                                  const b = getTripBounds(trip.coords);
+                                  if (b) setPanTarget({ bounds: b, ts: Date.now() });
+                                }
+                              }}
+                              style={{ 
+                                borderBottom: '1px solid #f1f5f9',
+                                backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.15s ease'
+                              }}
+                            >
+                              <td style={{ padding: '8px 4px' }}>
+                                <span style={{ 
+                                  backgroundColor: trip.colors, 
+                                  color: 'white', 
+                                  padding: '2px 7px', 
+                                  borderRadius: '4px', 
+                                  fontSize: '11px', 
+                                  fontWeight: 'bold',
+                                  boxShadow: isSelected ? '0 0 0 2px #2563eb' : 'none'
+                                }}>
+                                  {trip.num}
+                                </span>
+                              </td>
+                              <td style={{ padding: '8px 4px', fontSize: '12px', fontWeight: isSelected ? '600' : '400' }}>
+                                {trip.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </td>
+                              <td style={{ padding: '8px 4px', fontSize: '12px', fontWeight: isSelected ? '600' : '400' }}>
+                                {trip.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </td>
+                              <td style={{ padding: '8px 4px', textAlign: 'right', fontWeight: '600', color: isSelected ? '#2563eb' : '#0f172a' }}>
+                                {trip.distance.toFixed(2)} km
+                              </td>
+                              <td style={{ padding: '8px 4px', textAlign: 'center' }}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isSelected) {
+                                      setSelectedTripId(null);
+                                    } else {
+                                      setSelectedTripId(trip.id);
+                                      const b = getTripBounds(trip.coords);
+                                      if (b) setPanTarget({ bounds: b, ts: Date.now() });
+                                    }
+                                  }}
+                                  style={{
+                                    padding: '3px 8px',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    border: '1px solid',
+                                    backgroundColor: isSelected ? '#2563eb' : '#ffffff',
+                                    color: isSelected ? '#ffffff' : '#475569',
+                                    borderColor: isSelected ? '#1d4ed8' : '#cbd5e1'
+                                  }}
+                                >
+                                  {isSelected ? '✓ Mostrando' : 'Solo esta'}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -643,11 +754,34 @@ export const MonitoreoView = () => {
           <MapContainer center={[23.6345, -102.5528]} zoom={5} style={{ height: '100%', width: '100%', backgroundColor: '#aad3df' }}>
               <ResizeController isFullScreen={isFullScreen} />
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <MapController panTarget={panTarget} />
             
             {distances.map(driver => (
-               driver.trips.map(trip => (
-                 <Polyline key={`hist-line-${trip.id}`} positions={trip.coords} color={trip.colors} weight={4} opacity={0.8} smoothFactor={1} />
-               ))
+               driver.trips.map(trip => {
+                 if (selectedTripId && trip.id !== selectedTripId) return null;
+                 const isSelected = selectedTripId === trip.id;
+                 return (
+                   <React.Fragment key={`hist-group-${trip.id}`}>
+                     {isSelected && (
+                       <Polyline 
+                         positions={trip.coords} 
+                         color="#1e293b" 
+                         weight={8} 
+                         opacity={0.3} 
+                         smoothFactor={1} 
+                       />
+                     )}
+                     <Polyline 
+                       key={`hist-line-${trip.id}`} 
+                       positions={trip.coords} 
+                       color={trip.colors} 
+                       weight={isSelected ? 5 : 4} 
+                       opacity={0.85} 
+                       smoothFactor={1} 
+                     />
+                   </React.Fragment>
+                 );
+               })
             ))}
           </MapContainer>
         </div>

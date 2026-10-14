@@ -314,7 +314,7 @@ export const MonitoreoView = () => {
 
 
   // ==========================================
-  // VISTA DE MENÃƒÅ¡ PRINCIPAL
+  // VISTA DE MENÚ PRINCIPAL
   // ==========================================
   if (activeView === 'menu') {
     return (
@@ -574,94 +574,96 @@ export const MonitoreoView = () => {
   // ==========================================
   if (activeView === 'history') {
     return (
-      <div style={{ padding: '16px', minHeight: 'calc(100dvh - 100px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '12px 16px', minHeight: 'calc(100dvh - 90px)', display: 'flex', flexDirection: 'column' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-              <button onClick={() => setActiveView('menu')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569' }}>
-                <ArrowLeft size={18} /> Volver
+        {/* Barra superior compacta en 2 columnas: Izquierda (Título + Filtros) y Derecha (Tablita de Rutas) */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: distances.length > 0 ? 'minmax(340px, 460px) 1fr' : '1fr', 
+          gap: '16px', 
+          marginBottom: '10px', 
+          alignItems: 'stretch' 
+        }}>
+          
+          {/* Columna Izquierda: Botones de navegación y Filtros compactos */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button 
+                onClick={() => setActiveView('menu')} 
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', color: '#475569', fontSize: '13px' }}
+              >
+                <ArrowLeft size={16} /> Volver
               </button>
-              <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>Historial de Rutas</h2>
-              <button onClick={() => setIsFullScreen(true)} style={{ padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>Historial de Rutas</h2>
+              <button 
+                onClick={() => setIsFullScreen(true)} 
+                style={{ marginLeft: 'auto', padding: '6px 14px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+              >
                 Pantalla Completa
               </button>
             </div>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <label style={{ fontWeight: '500', color: '#475569', fontSize: '14px' }}>Operador:</label>
-              <select 
-                value={operatorFilter} 
-                onChange={(e) => {
-                  setOperatorFilter(e.target.value);
-                  setSelectedTripId(null);
-                }} 
-                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '14px' }}
-              >
-                <option value="ALL">Todos los operadores</option>
-                {uniqueOperators.map(op => (
-                  <option key={op.id} value={op.id}>{op.name} ({op.unit})</option>
-                ))}
-              </select>
-            </div>
-            <span style={{ color: '#cbd5e1' }}>|</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <label style={{ fontWeight: '500', color: '#475569', fontSize: '14px' }}>Tiempo:</label>
-              <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }} />
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }} />
-              <span style={{ color: '#64748b', fontSize: '14px' }}>a</span>
-              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '14px' }} />
-            </div>
-          </div>
-        </div>
+            
+            {/* Filtros ultra compactos */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label style={{ fontWeight: '600', color: '#475569', fontSize: '12px', minWidth: '60px' }}>Operador:</label>
+                <select 
+                  value={operatorFilter} 
+                  onChange={(e) => {
+                    setOperatorFilter(e.target.value);
+                    setSelectedTripId(null);
+                  }} 
+                  style={{ flex: 1, padding: '4px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '12px', fontWeight: '500' }}
+                >
+                  <option value="ALL">Todos los operadores</option>
+                  {uniqueOperators.map(op => (
+                    <option key={op.id} value={op.id}>{op.name} ({op.unit})</option>
+                  ))}
+                </select>
+              </div>
 
-        {/* Tablita de Rutas si hay un operador seleccionado o un resumen */}
-        {distances.length > 0 && (
-          <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
-            {distances.map(driver => (
-              <div key={driver.tid} style={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', minWidth: '400px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ fontSize: '16px' }}>{driver.unitName}</strong>
-                  <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Total: {driver.totalDistance.toFixed(2)} km</span>
-                </div>
-                
-                {/* Desglose de viajes (si es ALL solo muestra total, si es uno, muestra tabla) */}
-                {(operatorFilter !== 'ALL' || distances.length === 1) && (
-                  <div style={{ padding: '12px 16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                        Se detectaron {driver.trips.length} viajes distintos:
-                      </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <label style={{ fontWeight: '600', color: '#475569', fontSize: '12px', minWidth: '60px' }}>Tiempo:</label>
+                <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} style={{ padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '12px' }} />
+                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={{ padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '12px' }} />
+                <span style={{ color: '#64748b', fontSize: '12px' }}>a</span>
+                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={{ padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', fontSize: '12px' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Tablita de viajes arriba a la derecha */}
+          {distances.length > 0 && (
+            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', minHeight: '90px' }}>
+              {distances.map(driver => (
+                <div key={driver.tid} style={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', flex: 1, minWidth: '340px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: '#f8fafc', padding: '6px 12px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong style={{ fontSize: '13px', color: '#0f172a' }}>{driver.unitName}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '12px' }}>Total: {driver.totalDistance.toFixed(2)} km</span>
                       {selectedTripId && (
                         <button 
                           onClick={() => setSelectedTripId(null)}
                           style={{
-                            padding: '3px 10px',
+                            padding: '2px 8px',
                             fontSize: '11px',
                             fontWeight: 'bold',
                             backgroundColor: '#e0e7ff',
                             color: '#2563eb',
                             border: '1px solid #bfdbfe',
-                            borderRadius: '6px',
+                            borderRadius: '4px',
                             cursor: 'pointer'
                           }}
                         >
-                          👁️ Ver todas las rutas
+                          👁️ Todas ({driver.trips.length})
                         </button>
                       )}
                     </div>
-                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
-                          <th style={{ paddingBottom: '6px' }}>#</th>
-                          <th style={{ paddingBottom: '6px' }}>Inicio</th>
-                          <th style={{ paddingBottom: '6px' }}>Fin</th>
-                          <th style={{ paddingBottom: '6px', textAlign: 'right' }}>Distancia</th>
-                          <th style={{ paddingBottom: '6px', textAlign: 'center' }}>Filtro</th>
-                        </tr>
-                      </thead>
+                  </div>
+                  
+                  {/* Desglose de viajes */}
+                  <div style={{ padding: '4px 10px', overflowY: 'auto', maxHeight: '72px' }}>
+                    <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
                       <tbody>
                         {driver.trips.map(trip => {
                           const isSelected = selectedTripId === trip.id;
@@ -680,33 +682,29 @@ export const MonitoreoView = () => {
                               style={{ 
                                 borderBottom: '1px solid #f1f5f9',
                                 backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
-                                cursor: 'pointer',
-                                transition: 'background-color 0.15s ease'
+                                cursor: 'pointer'
                               }}
                             >
-                              <td style={{ padding: '8px 4px' }}>
+                              <td style={{ padding: '3px 2px' }}>
                                 <span style={{ 
                                   backgroundColor: trip.colors, 
                                   color: 'white', 
-                                  padding: '2px 7px', 
-                                  borderRadius: '4px', 
-                                  fontSize: '11px', 
+                                  padding: '1px 5px', 
+                                  borderRadius: '3px', 
+                                  fontSize: '10px', 
                                   fontWeight: 'bold',
                                   boxShadow: isSelected ? '0 0 0 2px #2563eb' : 'none'
                                 }}>
-                                  {trip.num}
+                                  #{trip.num}
                                 </span>
                               </td>
-                              <td style={{ padding: '8px 4px', fontSize: '12px', fontWeight: isSelected ? '600' : '400' }}>
-                                {trip.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              <td style={{ padding: '3px 2px', fontSize: '11px', fontWeight: isSelected ? '600' : '400' }}>
+                                {trip.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {trip.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                               </td>
-                              <td style={{ padding: '8px 4px', fontSize: '12px', fontWeight: isSelected ? '600' : '400' }}>
-                                {trip.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              </td>
-                              <td style={{ padding: '8px 4px', textAlign: 'right', fontWeight: '600', color: isSelected ? '#2563eb' : '#0f172a' }}>
+                              <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', color: isSelected ? '#2563eb' : '#0f172a', fontSize: '11px' }}>
                                 {trip.distance.toFixed(2)} km
                               </td>
-                              <td style={{ padding: '8px 4px', textAlign: 'center' }}>
+                              <td style={{ padding: '3px 2px', textAlign: 'right' }}>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -719,10 +717,10 @@ export const MonitoreoView = () => {
                                     }
                                   }}
                                   style={{
-                                    padding: '3px 8px',
-                                    fontSize: '11px',
+                                    padding: '2px 6px',
+                                    fontSize: '10px',
                                     fontWeight: '600',
-                                    borderRadius: '6px',
+                                    borderRadius: '4px',
                                     cursor: 'pointer',
                                     border: '1px solid',
                                     backgroundColor: isSelected ? '#2563eb' : '#ffffff',
@@ -739,13 +737,14 @@ export const MonitoreoView = () => {
                       </tbody>
                     </table>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         
-        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, backgroundColor: '#f8fafc' } : { height: '600px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', marginTop: '16px' }}>
+        {/* Contenedor del Mapa - Elevado con máximo espacio visual */}
+        <div style={isFullScreen ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, backgroundColor: '#f8fafc' } : { flex: 1, minHeight: '580px', height: 'calc(100dvh - 210px)', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative' }}>
           {isFullScreen && (
             <button onClick={() => setIsFullScreen(false)} style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10000, padding: '12px 24px', backgroundColor: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               Salir de Pantalla Completa

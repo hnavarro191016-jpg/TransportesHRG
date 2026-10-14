@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { INITIAL_DATA } from '../data/initialData';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { createClient } from '@supabase/supabase-js';
@@ -71,11 +71,13 @@ export const AppProvider = ({ children }) => {
         setActiveUser(userData);
         setActiveRole(userData.role);
       } else {
-        // Los perfiles se crean por trigger y se habilitan desde AdministraciÃ³n.
+        // Los perfiles se crean por trigger y se habilitan desde Administración.
         // Nunca se asignan ni recuperan roles desde el navegador.
         setActiveUser(null);
         setActiveRole(null);
       }
+      // Recargar datos desde Supabase con la sesión activa autenticada (para resolver RLS en romo_users)
+      fetchFromSupabase();
     } catch (err) {
       console.error('Error fetching current user:', err);
     } finally {
@@ -104,7 +106,7 @@ export const AppProvider = ({ children }) => {
       finalEmail = `${finalEmail.trim().toLowerCase()}@hrg.local`;
     }
 
-    // Usar un cliente temporal sin persistencia para no destruir la sesiÃ³n del administrador actual
+    // Usar un cliente temporal sin persistencia para no destruir la sesión del administrador actual
     const tempSupabase = createClient(
       import.meta.env.VITE_SUPABASE_URL,
       import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -371,7 +373,7 @@ export const AppProvider = ({ children }) => {
 
   const resetDemoData = () => {
     setData(INITIAL_DATA);
-    addToast('Datos de demostraciÃ³n restablecidos correctamente', 'warning');
+    addToast('Datos de demostración restablecidos correctamente', 'warning');
   };
 
   const formatMXN = (amount) => {
@@ -397,7 +399,7 @@ export const AppProvider = ({ children }) => {
       p_items: document.items
     });
     if (error) {
-      addToast(`No se registrÃ³ el movimiento: ${error.message}`, 'danger');
+      addToast(`No se registró el movimiento: ${error.message}`, 'danger');
       return false;
     }
     return true;
@@ -523,7 +525,7 @@ export const AppProvider = ({ children }) => {
     const newCat = { ...cat, id: `cat-${Date.now()}` };
     setData((prev) => ({ ...prev, categories: [...prev.categories, newCat] }));
     if (supabase) await supabase.from('romo_categories').insert([newCat]);
-    addToast(`CategorÃ­a "${newCat.name}" agregada`);
+    addToast(`Categoría "${newCat.name}" agregada`);
   };
 
   const addBrand = async (brand) => {
@@ -537,7 +539,7 @@ export const AppProvider = ({ children }) => {
     const newWh = { ...wh, id: `wh-${Date.now()}` };
     setData((prev) => ({ ...prev, warehouses: [...prev.warehouses, newWh] }));
     if (supabase) await supabase.from('romo_warehouses').insert([newWh]);
-    addToast(`AlmacÃ©n "${newWh.name}" creado`);
+    addToast(`Almacén "${newWh.name}" creado`);
   };
 
   const addSupplier = async (sup) => {
@@ -751,12 +753,12 @@ export const AppProvider = ({ children }) => {
 
     if (otData.partsUsed && otData.partsUsed.length > 0) {
       const exitSuccess = await addExit({
-        reason: otData.type === 'preventivo' ? 'Mantenimiento preventivo' : 'ReparaciÃ³n correctiva',
+        reason: otData.type === 'preventivo' ? 'Mantenimiento preventivo' : 'Reparación correctiva',
         unitId: otData.unitId,
         economicNumber: otData.economicNumber,
         workOrderId: newOT.id,
         workOrderFolio: folio,
-        warehouse: otData.warehouse || 'AlmacÃ©n Taller Central',
+        warehouse: otData.warehouse || 'Almacén Taller Central',
         responsibleUser: otData.technician || activeUser.name,
         notes: `Refacciones asignadas a la Orden de Trabajo ${folio}`,
         items: otData.partsUsed.map((p) => ({
@@ -932,7 +934,7 @@ export const AppProvider = ({ children }) => {
           warehouse: adjData.warehouse,
           unitRelated: '-',
           user: activeUser.name,
-          notes: `Ajuste fÃ­sico: ${adjData.reason} (Dif: ${diff > 0 ? '+' + diff : diff})`
+          notes: `Ajuste físico: ${adjData.reason} (Dif: ${diff > 0 ? '+' + diff : diff})`
         });
       }
     });

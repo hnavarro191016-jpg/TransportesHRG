@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import { Truck, MapPinned, ArrowLeft } from 'lucide-react';
+import { Truck, MapPinned, ArrowLeft, Search, ChevronDown, X } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
@@ -102,6 +102,262 @@ const MapController = ({ panTarget }) => {
     }
   }, [panTarget, map]);
   return null;
+};
+
+const OperatorSearchSelect = ({ 
+  value, 
+  onChange, 
+  operators = [], 
+  allLabel = 'Todos los operadores',
+  placeholder = 'Buscar operador...',
+  isCompact = true
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const containerRef = React.useRef(null);
+  const inputRef = React.useRef(null);
+
+  const normalize = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+  const selectedOperator = useMemo(() => {
+    if (!value || value === 'ALL') return null;
+    return operators.find(op => String(op.id) === String(value)) || null;
+  }, [value, operators]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+        setQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredOperators = useMemo(() => {
+    if (!query.trim()) return operators;
+    const qNorm = normalize(query);
+    
+    return operators
+      .filter(op => {
+        const nameNorm = normalize(op.name);
+        const unitNorm = normalize(op.unit);
+        return nameNorm.includes(qNorm) || unitNorm.includes(qNorm);
+      })
+      .sort((a, b) => {
+        const aNorm = normalize(a.name);
+        const bNorm = normalize(b.name);
+        const aStarts = aNorm.startsWith(qNorm);
+        const bStarts = bNorm.startsWith(qNorm);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.name.localeCompare(b.name);
+      });
+  }, [operators, query]);
+
+  const handleSelect = (opId) => {
+    onChange(opId);
+    setIsOpen(false);
+    setQuery('');
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    onChange('ALL');
+    setQuery('');
+    setIsOpen(false);
+  };
+
+  const selectedDisplayName = selectedOperator 
+    ? `${selectedOperator.name}${selectedOperator.unit && selectedOperator.unit !== 'Sin Asignar' ? ` (${selectedOperator.unit})` : ''}` 
+    : `${allLabel} (${operators.length})`;
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', minWidth: 0 }}>
+      {/* Input de búsqueda / selector */}
+      <div 
+        onClick={() => {
+          setIsOpen(true);
+          inputRef.current?.focus();
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          backgroundColor: 'white',
+          border: isOpen ? '1px solid #2563eb' : '1px solid #cbd5e1',
+          boxShadow: isOpen ? '0 0 0 2px rgba(37,99,235,0.15)' : 'none',
+          borderRadius: isCompact ? '6px' : '8px',
+          padding: isCompact ? '2px 6px' : '6px 12px',
+          cursor: 'pointer',
+          transition: 'all 0.15s ease',
+          height: isCompact ? '26px' : '38px',
+          boxSizing: 'border-box'
+        }}
+      >
+        <Search size={isCompact ? 12 : 15} style={{ color: '#94a3b8', flexShrink: 0 }} />
+        
+        <input 
+          ref={inputRef}
+          type="text"
+          value={isOpen ? query : selectedDisplayName}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!isOpen) setIsOpen(true);
+          }}
+          onFocus={() => {
+            setIsOpen(true);
+            setQuery('');
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false);
+              setQuery('');
+            } else if (e.key === 'Enter') {
+              if (filteredOperators.length > 0) {
+                handleSelect(filteredOperators[0].id);
+              }
+            }
+          }}
+          placeholder={isOpen ? (selectedOperator ? selectedOperator.name : placeholder) : placeholder}
+          style={{
+            flex: 1,
+            border: 'none',
+            outline: 'none',
+            fontSize: isCompact ? '11px' : '13px',
+            color: (isOpen && query) ? '#0f172a' : (selectedOperator ? '#1d4ed8' : '#334155'),
+            fontWeight: selectedOperator ? '600' : '500',
+            backgroundColor: 'transparent',
+            minWidth: 0,
+            cursor: 'text',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden'
+          }}
+        />
+
+        {/* Botón de limpiar o flecha indicadora */}
+        {selectedOperator ? (
+          <button 
+            type="button"
+            onClick={handleClear}
+            style={{
+              border: 'none',
+              background: '#f1f5f9',
+              borderRadius: '50%',
+              width: isCompact ? '16px' : '20px',
+              height: isCompact ? '16px' : '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#64748b',
+              padding: 0,
+              flexShrink: 0
+            }}
+            title="Mostrar todos los operadores"
+          >
+            <X size={isCompact ? 10 : 13} />
+          </button>
+        ) : (
+          <ChevronDown size={isCompact ? 12 : 16} style={{ color: '#94a3b8', flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
+        )}
+      </div>
+
+      {/* Menú flotante desplegable */}
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 4px)',
+          left: 0,
+          right: 0,
+          minWidth: isCompact ? '260px' : '100%',
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          border: '1px solid #cbd5e1',
+          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1)',
+          maxHeight: '230px',
+          overflowY: 'auto',
+          zIndex: 1100,
+          padding: '4px'
+        }}>
+          {/* Opción 'Todos los operadores' */}
+          <div 
+            onClick={() => handleSelect('ALL')}
+            style={{
+              padding: isCompact ? '5px 8px' : '8px 12px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: isCompact ? '11px' : '13px',
+              fontWeight: (!value || value === 'ALL') ? '700' : '500',
+              color: (!value || value === 'ALL') ? '#2563eb' : '#334155',
+              backgroundColor: (!value || value === 'ALL') ? '#eff6ff' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '2px',
+              borderBottom: '1px solid #f1f5f9'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = (!value || value === 'ALL') ? '#eff6ff' : '#f8fafc'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = (!value || value === 'ALL') ? '#eff6ff' : 'transparent'}
+          >
+            <span>{allLabel} ({operators.length})</span>
+            {(!value || value === 'ALL') && <span style={{ fontSize: '10px' }}>✓</span>}
+          </div>
+
+          {/* Lista de operadores filtrados */}
+          {filteredOperators.length === 0 ? (
+            <div style={{ padding: '8px', textAlign: 'center', fontSize: isCompact ? '11px' : '13px', color: '#94a3b8' }}>
+              No se encontraron operadores para "{query}"
+            </div>
+          ) : (
+            filteredOperators.map(op => {
+              const isSelected = String(value) === String(op.id);
+              return (
+                <div 
+                  key={op.id}
+                  onClick={() => handleSelect(op.id)}
+                  style={{
+                    padding: isCompact ? '5px 8px' : '7px 12px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: isCompact ? '11px' : '13px',
+                    fontWeight: isSelected ? '700' : '400',
+                    color: isSelected ? '#2563eb' : '#1e293b',
+                    backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '6px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isSelected ? '#eff6ff' : '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isSelected ? '#eff6ff' : 'transparent'}
+                >
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {op.name}
+                  </span>
+                  {op.unit && op.unit !== 'Sin Asignar' && (
+                    <span style={{ 
+                      fontSize: isCompact ? '9.5px' : '11px', 
+                      backgroundColor: isSelected ? '#dbeafe' : '#f1f5f9', 
+                      color: isSelected ? '#1e40af' : '#64748b', 
+                      padding: '1px 5px', 
+                      borderRadius: '4px',
+                      flexShrink: 0,
+                      fontWeight: '600'
+                    }}>
+                      {op.unit}
+                    </span>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export const MonitoreoView = () => {
@@ -467,13 +723,11 @@ export const MonitoreoView = () => {
               REC Live
             </div>
             
-            <div style={{ marginLeft: '16px', display: 'flex', alignItems: 'center' }}>
-              <select 
-                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '14px', fontWeight: '500', minWidth: '250px' }}
-                value={selectedLiveTruck || ''}
-                onChange={(e) => {
-                  const tid = e.target.value;
-                  if (!tid) {
+            <div style={{ marginLeft: '16px', display: 'flex', alignItems: 'center', width: '280px' }}>
+              <OperatorSearchSelect 
+                value={selectedLiveTruck || 'ALL'}
+                onChange={(tid) => {
+                  if (!tid || tid === 'ALL') {
                     setSelectedLiveTruck(null);
                     return;
                   }
@@ -483,12 +737,11 @@ export const MonitoreoView = () => {
                     setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() });
                   }
                 }}
-              >
-                <option value="">-- Todos los Operadores --</option>
-                {uniqueOperators.map(op => (
-                  <option key={op.id} value={op.id}>{op.unit} - {op.name}</option>
-                ))}
-              </select>
+                operators={uniqueOperators}
+                allLabel="Todos los Operadores"
+                placeholder="Buscar operador en vivo..."
+                isCompact={false}
+              />
             </div>
           <button onClick={() => setIsFullScreen(true)} style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
             Pantalla Completa
@@ -682,21 +935,19 @@ export const MonitoreoView = () => {
             <div style={{ backgroundColor: '#f8fafc', padding: '6px 8px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <label style={{ fontWeight: '600', color: '#475569', fontSize: '11px', width: '50px', flexShrink: 0 }}>Operador:</label>
-                <select 
-                  value={operatorFilter} 
-                  onChange={(e) => {
-                    setOperatorFilter(e.target.value);
-                    setSelectedTripId(null);
-                  }} 
-                  style={{ flex: 1, padding: '3px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer', backgroundColor: 'white', fontSize: '11px', fontWeight: '500', minWidth: 0 }}
-                >
-                  <option value="ALL">Todos los operadores ({uniqueOperators.length})</option>
-                  {uniqueOperators.map(op => (
-                    <option key={op.id} value={op.id}>
-                      {op.name}{op.unit && op.unit !== 'Sin Asignar' ? ` (${op.unit})` : ''}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <OperatorSearchSelect 
+                    value={operatorFilter}
+                    onChange={(val) => {
+                      setOperatorFilter(val);
+                      setSelectedTripId(null);
+                    }}
+                    operators={uniqueOperators}
+                    allLabel="Todos los operadores"
+                    placeholder="Buscar operador..."
+                    isCompact={true}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>

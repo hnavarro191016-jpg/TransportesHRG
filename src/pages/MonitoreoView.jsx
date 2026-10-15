@@ -123,67 +123,95 @@ const createEndIcon = (label = 'B') => new L.divIcon({
   iconAnchor: [11, 11]
 });
 
-const getSampledDirectionArrows = (coords, color = '#2563eb', maxArrows = 25) => {
+const getSampledDirectionArrows = (coords, color = '#2563eb', targetCount = 30) => {
   if (!coords || coords.length < 2) return [];
   const totalKm = getTotalDistance(coords);
-  if (totalKm <= 0) return [];
+  if (totalKm <= 0.05) return [];
 
-  // Espaciado adaptativo estricto: evita saturar el DOM de Leaflet
-  // En rutas cortas: cada 120-150m. En rutas largas: proporcional para máximo 25 flechas.
-  const minSpacingKm = Math.max(0.12, totalKm / maxArrows);
+  // Espaciado uniforme para cubrir el 100% de la ruta (tanto ciudad como carretera)
+  // En rutas cortas (<5km): cada ~150m-200m
+  // En carreteras largas (>40km): cada ~1.5km - 2.5km
+  const idealStepKm = Math.max(0.15, totalKm / targetCount);
   const arrows = [];
-  let accumulatedDist = 0;
+  
+  let accumulatedKm = 0;
+  let nextTargetKm = idealStepKm * 0.4; // Primera flecha poco después del inicio
   let lastBearing = null;
   let lastArrowPoint = null;
 
   for (let i = 0; i < coords.length - 1; i++) {
-    if (arrows.length >= maxArrows) break;
-
     const p1 = coords[i];
     const p2 = coords[i + 1];
     const segDist = calculateDistance(p1[0], p1[1], p2[0], p2[1]);
-    if (segDist < 0.005) continue;
+    if (segDist < 0.002) continue;
 
     const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-    accumulatedDist += segDist;
+    const segStartKm = accumulatedKm;
+    const segEndKm = accumulatedKm + segDist;
 
-    let isTurn = false;
+    // Detectar vueltas / esquinas pronunciadas en ciudad
+    let isSharpTurn = false;
     if (lastBearing !== null) {
-      let diffAngle = Math.abs(bearing - lastBearing);
-      if (diffAngle > 180) diffAngle = 360 - diffAngle;
-      if (diffAngle >= 35) isTurn = true;
+      let diff = Math.abs(bearing - lastBearing);
+      if (diff > 180) diff = 360 - diff;
+      if (diff >= 40) isSharpTurn = true;
     }
 
-    const midLat = (p1[0] + p2[0]) / 2;
-    const midLng = (p1[1] + p2[1]) / 2;
-    const distFromLastArrow = lastArrowPoint 
-      ? calculateDistance(lastArrowPoint[0], lastArrowPoint[1], midLat, midLng)
-      : 999;
+    // 1. Flechas regulares por distancia acumulada (Garantiza flechas continuas en carretera)
+    while (nextTargetKm <= segEndKm && arrows.length < targetCount + 10) {
+      const offset = nextTargetKm - segStartKm;
+      const fraction = segDist > 0 ? Math.max(0.05, Math.min(0.95, offset / segDist)) : 0.5;
+      const lat = p1[0] + (p2[0] - p1[0]) * fraction;
+      const lng = p1[1] + (p2[1] - p1[1]) * fraction;
 
-    if ((isTurn && distFromLastArrow >= 0.06) || accumulatedDist >= minSpacingKm) {
       arrows.push({
-        key: `arr-${i}-${midLat.toFixed(4)}-${midLng.toFixed(4)}`,
-        lat: midLat,
-        lng: midLng,
+        key: `arr-dist-${i}-${arrows.length}-${lat.toFixed(4)}-${lng.toFixed(4)}`,
+        lat,
+        lng,
         bearing,
         color
       });
-      lastArrowPoint = [midLat, midLng];
+
+      lastArrowPoint = [lat, lng];
       lastBearing = bearing;
-      accumulatedDist = 0;
+      nextTargetKm += idealStepKm;
     }
+
+    // 2. Si hubo una vuelta cerrada en ciudad y no hay una flecha muy cerca
+    if (isSharpTurn && arrows.length < targetCount + 10) {
+      const midLat = (p1[0] + p2[0]) / 2;
+      const midLng = (p1[1] + p2[1]) / 2;
+      const distFromLast = lastArrowPoint 
+        ? calculateDistance(lastArrowPoint[0], lastArrowPoint[1], midLat, midLng)
+        : 999;
+
+      if (distFromLast >= 0.08) {
+        arrows.push({
+          key: `arr-turn-${i}-${midLat.toFixed(4)}-${midLng.toFixed(4)}`,
+          lat: midLat,
+          lng: midLng,
+          bearing,
+          color
+        });
+        lastArrowPoint = [midLat, midLng];
+        lastBearing = bearing;
+      }
+    }
+
+    accumulatedKm = segEndKm;
+    lastBearing = bearing;
   }
 
+  // Fallback si por alguna razón no se colocaron flechas
   if (arrows.length === 0 && coords.length >= 2) {
     const midIdx = Math.floor(coords.length / 2);
     const p1 = coords[Math.max(0, midIdx - 1)];
     const p2 = coords[Math.min(coords.length - 1, midIdx + 1)];
-    const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
     arrows.push({
-      key: `arr-mid-fallback`,
+      key: `arr-fallback`,
       lat: (coords[0][0] + coords[coords.length - 1][0]) / 2,
       lng: (coords[0][1] + coords[coords.length - 1][1]) / 2,
-      bearing,
+      bearing: calculateBearing(p1[0], p1[1], p2[0], p2[1]),
       color
     });
   }
@@ -1041,7 +1069,7 @@ export const MonitoreoView = () => {
                     }
                     if (coords.length < 2) return null;
 
-                    const arrows = getSampledDirectionArrows(coords, '#2563eb', 20);
+                    const arrows = getSampledDirectionArrows(coords, '#2563eb', 30);
 
                     return (
                       <React.Fragment key={`live-hist-group-${trip.id}`}>
@@ -1314,7 +1342,7 @@ export const MonitoreoView = () => {
               const isSelected = selectedTripId === trip.id;
               const tripColor = trip.colors || '#2563eb';
               const shouldRenderArrows = (operatorFilter !== 'ALL' || Boolean(selectedTripId));
-              const arrows = shouldRenderArrows ? getSampledDirectionArrows(trip.coords, tripColor, 20) : [];
+              const arrows = shouldRenderArrows ? getSampledDirectionArrows(trip.coords, tripColor, 30) : [];
 
               return (
                 <React.Fragment key={`hist-group-${trip.id}`}>

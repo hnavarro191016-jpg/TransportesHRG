@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { UserCog, ShieldCheck, CheckCircle, XCircle, AlertCircle, Plus, X, UserPlus } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 export const UsersView = () => {
   const { data, activeRole, activeUser, updateUser, register, fetchFromSupabase, addToast } = useApp();
@@ -53,12 +54,28 @@ export const UsersView = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const authData = await register(newUser.name, newUser.email, newUser.password, true);
-      
-      // Delay slightly as the supabase trigger might take a moment to insert into romo_users
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let finalEmail = newUser.email;
+      if (!finalEmail.includes('@')) {
+        finalEmail = `${finalEmail.trim().toLowerCase()}@hrg.local`;
+      }
 
+      const authData = await register(newUser.name, newUser.email, newUser.password, true, newUser.role);
+      
       if (authData?.user?.id) {
+        if (supabase) {
+          try {
+            await supabase.from('romo_users').upsert({
+              id: authData.user.id,
+              name: newUser.name,
+              email: finalEmail,
+              role: newUser.role,
+              active: true,
+              must_change_password: true
+            });
+          } catch (upsertErr) {
+            console.warn('Upsert fallback warning:', upsertErr);
+          }
+        }
         await updateUser(authData.user.id, { role: newUser.role, active: true });
       }
       

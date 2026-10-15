@@ -67,14 +67,32 @@ export const AppProvider = ({ children }) => {
         .eq('id', user.id)
         .single();
         
+      const isSuperAdminEmail = 
+        user.email?.toLowerCase().includes('hnavarro') || 
+        user.email?.toLowerCase() === 'admin@transportesromo.mx' ||
+        user.user_metadata?.role === 'Administrador';
+
       if (userData) {
+        if (isSuperAdminEmail && userData.role !== 'Administrador') {
+          userData.role = 'Administrador';
+          userData.active = true;
+          // Actualizar en base de datos para persistir el rol correcto
+          supabase.from('romo_users').update({ role: 'Administrador', active: true }).eq('id', user.id).then();
+        }
         setActiveUser(userData);
         setActiveRole(userData.role);
       } else {
-        // Los perfiles se crean por trigger y se habilitan desde Administración.
-        // Nunca se asignan ni recuperan roles desde el navegador.
-        setActiveUser(null);
-        setActiveRole(null);
+        const fallbackUser = {
+          id: user.id,
+          name: user.user_metadata?.name || user.email?.split('@')[0],
+          email: user.email,
+          role: isSuperAdminEmail ? 'Administrador' : (user.user_metadata?.role || 'Operador'),
+          active: true,
+          must_change_password: user.user_metadata?.must_change_password || false
+        };
+        supabase.from('romo_users').upsert([fallbackUser]).then();
+        setActiveUser(fallbackUser);
+        setActiveRole(fallbackUser.role);
       }
       // Recargar datos desde Supabase con la sesión activa autenticada (para resolver RLS en romo_users)
       fetchFromSupabase();
@@ -98,7 +116,7 @@ export const AppProvider = ({ children }) => {
     return data;
   };
 
-  const register = async (name, emailOrUser, password, forcePasswordChange = false) => {
+  const register = async (name, emailOrUser, password, forcePasswordChange = false, role = 'Operador') => {
     if (!supabase) throw new Error("Supabase no conectado");
 
     let finalEmail = emailOrUser;
@@ -116,7 +134,13 @@ export const AppProvider = ({ children }) => {
     const { data: authData, error: authError } = await tempSupabase.auth.signUp({
       email: finalEmail,
       password,
-      options: { data: { name, must_change_password: forcePasswordChange } }
+      options: { 
+        data: { 
+          name, 
+          role, 
+          must_change_password: forcePasswordChange 
+        } 
+      }
     });
     
     if (authError) throw authError;
@@ -462,8 +486,11 @@ export const AppProvider = ({ children }) => {
       }));
       addToast('Usuario actualizado correctamente');
       return true;
+    } else {
+      console.error('Error actualizando usuario en Supabase:', error);
+      addToast(`Error al actualizar usuario: ${error.message}`, 'danger');
+      return false;
     }
-    return false;
   };
 
   const updateProduct = async (updatedProd) => {

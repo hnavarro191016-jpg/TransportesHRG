@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import { Truck, MapPinned, ArrowLeft, Search, ChevronDown, X } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { Truck, MapPinned, ArrowLeft, Search, ChevronDown, X, Crosshair } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
@@ -37,6 +37,138 @@ const getTotalDistance = (coords) => {
     total += calculateDistance(coords[i-1][0], coords[i-1][1], coords[i][0], coords[i][1]);
   }
   return total;
+};
+
+const calculateBearing = (lat1, lon1, lat2, lon2) => {
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const lat1Rad = lat1 * (Math.PI / 180);
+  const lat2Rad = lat2 * (Math.PI / 180);
+  const y = Math.sin(dLon) * Math.cos(lat2Rad);
+  const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  return (brng + 360) % 360;
+};
+
+const createArrowIcon = (bearing, color = '#2563eb') => {
+  return new L.divIcon({
+    className: 'custom-direction-arrow',
+    html: `
+      <div style="
+        transform: rotate(${Math.round(bearing)}deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55));
+        pointer-events: none;
+      ">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L20 21L12 17L4 21L12 2Z" fill="${color}" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round" />
+        </svg>
+      </div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+};
+
+const createStartIcon = (label = 'A') => new L.divIcon({
+  className: 'custom-start-marker',
+  html: `
+    <div style="
+      background-color: #16a34a;
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+      cursor: pointer;
+    ">
+      ${label}
+    </div>
+  `,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11]
+});
+
+const createEndIcon = (label = 'B') => new L.divIcon({
+  className: 'custom-end-marker',
+  html: `
+    <div style="
+      background-color: #dc2626;
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+      cursor: pointer;
+    ">
+      ${label}
+    </div>
+  `,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11]
+});
+
+const getSampledDirectionArrows = (coords, color = '#2563eb') => {
+  if (!coords || coords.length < 2) return [];
+  const arrows = [];
+  const totalKm = getTotalDistance(coords);
+  
+  // Espaciado óptimo para mostrar la dirección sin saturar la pantalla
+  const minSpacingKm = totalKm > 30 ? 3.5 : (totalKm > 5 ? 1.5 : 0.6);
+  let accumulatedDist = 0;
+
+  for (let i = 0; i < coords.length - 1; i++) {
+    const p1 = coords[i];
+    const p2 = coords[i + 1];
+    const segDist = calculateDistance(p1[0], p1[1], p2[0], p2[1]);
+    accumulatedDist += segDist;
+
+    if (accumulatedDist >= minSpacingKm) {
+      const midLat = (p1[0] + p2[0]) / 2;
+      const midLng = (p1[1] + p2[1]) / 2;
+      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+
+      arrows.push({
+        key: `arr-${i}-${midLat.toFixed(4)}-${midLng.toFixed(4)}`,
+        lat: midLat,
+        lng: midLng,
+        bearing,
+        color
+      });
+      accumulatedDist = 0;
+    }
+  }
+
+  // Si no se agregó ninguna flecha (ej. viaje muy corto), agregar al menos una en el punto medio
+  if (arrows.length === 0 && coords.length >= 2) {
+    const p1 = coords[0];
+    const p2 = coords[coords.length - 1];
+    const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+    arrows.push({
+      key: `arr-mid-fallback`,
+      lat: (p1[0] + p2[0]) / 2,
+      lng: (p1[1] + p2[1]) / 2,
+      bearing,
+      color
+    });
+  }
+
+  return arrows;
 };
 
 
@@ -633,15 +765,41 @@ export const MonitoreoView = () => {
     return allDistances.filter(d => String(d.tid) === String(operatorFilter));
   }, [allDistances, operatorFilter]);
 
+  const lastFitKeyRef = useRef('');
+
   useEffect(() => {
     if (activeView === 'history' && distances.length > 0) {
-      const allCoords = distances.flatMap(d => (d.trips || []).flatMap(t => t.coords));
-      if (allCoords.length >= 2) {
-        const b = getTripBounds(allCoords);
-        if (b) setPanTarget({ bounds: b, ts: Date.now() });
+      const currentFitKey = `${operatorFilter}_${dateFilter}_${startTime}_${endTime}_${selectedTripId || 'all'}`;
+      if (lastFitKeyRef.current !== currentFitKey) {
+        lastFitKeyRef.current = currentFitKey;
+        let allCoords = [];
+        if (selectedTripId) {
+          const trip = distances.flatMap(d => d.trips || []).find(t => t.id === selectedTripId);
+          if (trip && trip.coords) allCoords = trip.coords;
+        } else {
+          allCoords = distances.flatMap(d => (d.trips || []).flatMap(t => t.coords));
+        }
+        if (allCoords.length >= 2) {
+          const b = getTripBounds(allCoords);
+          if (b) setPanTarget({ bounds: b, ts: Date.now() });
+        }
       }
     }
-  }, [distances, activeView]);
+  }, [distances, activeView, operatorFilter, dateFilter, startTime, endTime, selectedTripId]);
+
+  const handleCenterMap = () => {
+    let allCoords = [];
+    if (selectedTripId) {
+      const trip = distances.flatMap(d => d.trips || []).find(t => t.id === selectedTripId);
+      if (trip && trip.coords) allCoords = trip.coords;
+    } else {
+      allCoords = distances.flatMap(d => (d.trips || []).flatMap(t => t.coords));
+    }
+    if (allCoords.length >= 2) {
+      const b = getTripBounds(allCoords);
+      if (b) setPanTarget({ bounds: b, ts: Date.now() });
+    }
+  };
 
 
   // ==========================================
@@ -863,12 +1021,36 @@ export const MonitoreoView = () => {
                     }
                     if (coords.length < 2) return null;
 
+                    const arrows = getSampledDirectionArrows(coords, '#2563eb');
+
                     return (
                       <React.Fragment key={`live-hist-group-${trip.id}`}>
                         {/* Contorno exterior para resaltar sobre el mapa */}
                         <Polyline positions={coords} color="#1d4ed8" weight={8} opacity={0.3} smoothFactor={1} />
                         {/* Trazo principal azul vibrante */}
                         <Polyline positions={coords} color="#2563eb" weight={4} opacity={0.9} smoothFactor={1} />
+
+                        {/* Flechitas de sentido de recorrido */}
+                        {arrows.map(arr => (
+                          <Marker
+                            key={arr.key}
+                            position={[arr.lat, arr.lng]}
+                            icon={createArrowIcon(arr.bearing, '#2563eb')}
+                            interactive={false}
+                          />
+                        ))}
+
+                        {/* Punto A (Inicio del recorrido) */}
+                        {coords[0] && (
+                          <Marker position={coords[0]} icon={createStartIcon('A')}>
+                            <Tooltip permanent={false} direction="top" offset={[0, -12]}>
+                              <div style={{ fontSize: '11px', fontWeight: 600 }}>
+                                🟢 <strong>Inicio del recorrido</strong><br />
+                                {trip.startTime ? `Hora: ${new Date(trip.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                              </div>
+                            </Tooltip>
+                          </Marker>
+                        )}
                       </React.Fragment>
                     );
                   });
@@ -924,8 +1106,15 @@ export const MonitoreoView = () => {
               </button>
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap' }}>Historial</h2>
               <button 
+                onClick={handleCenterMap} 
+                style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 9px', backgroundColor: '#f1f5f9', color: '#1e293b', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                title="Centrar mapa en la ruta actual"
+              >
+                <Crosshair size={13} style={{ color: '#2563eb' }} /> Centrar
+              </button>
+              <button 
                 onClick={() => setIsFullScreen(true)} 
-                style={{ marginLeft: 'auto', padding: '5px 10px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                style={{ padding: '5px 10px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 Pantalla Completa
               </button>
@@ -1103,6 +1292,9 @@ export const MonitoreoView = () => {
               if (selectedTripId && trip.id !== selectedTripId) return null;
               if (!trip.coords || trip.coords.length < 2) return null;
               const isSelected = selectedTripId === trip.id;
+              const tripColor = trip.colors || '#2563eb';
+              const arrows = getSampledDirectionArrows(trip.coords, tripColor);
+
               return (
                 <React.Fragment key={`hist-group-${trip.id}`}>
                   {isSelected && (
@@ -1117,11 +1309,46 @@ export const MonitoreoView = () => {
                   <Polyline 
                     key={`hist-line-${trip.id}`} 
                     positions={trip.coords} 
-                    color={trip.colors || '#2563eb'} 
+                    color={tripColor} 
                     weight={isSelected ? 5 : 4} 
                     opacity={0.85} 
                     smoothFactor={1} 
                   />
+
+                  {/* Flechitas indicadoras de dirección del recorrido */}
+                  {arrows.map(arr => (
+                    <Marker
+                      key={arr.key}
+                      position={[arr.lat, arr.lng]}
+                      icon={createArrowIcon(arr.bearing, tripColor)}
+                      interactive={false}
+                    />
+                  ))}
+
+                  {/* Punto de Inicio (A) */}
+                  {trip.coords[0] && (
+                    <Marker position={trip.coords[0]} icon={createStartIcon(trip.num > 1 ? `A${trip.num}` : 'A')}>
+                      <Tooltip permanent={false} direction="top" offset={[0, -12]}>
+                        <div style={{ fontSize: '11px', fontWeight: 600 }}>
+                          🟢 <strong>Inicio - Viaje #{trip.num}</strong><br />
+                          {trip.startTime ? `Salida: ${new Date(trip.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                        </div>
+                      </Tooltip>
+                    </Marker>
+                  )}
+
+                  {/* Punto de Fin / Llegada (B) */}
+                  {trip.coords[trip.coords.length - 1] && (
+                    <Marker position={trip.coords[trip.coords.length - 1]} icon={createEndIcon(trip.num > 1 ? `B${trip.num}` : 'B')}>
+                      <Tooltip permanent={false} direction="top" offset={[0, -12]}>
+                        <div style={{ fontSize: '11px', fontWeight: 600 }}>
+                          🔴 <strong>Fin - Viaje #{trip.num}</strong><br />
+                          {trip.endTime ? `Llegada: ${new Date(trip.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}<br />
+                          Distancia: {trip.distance.toFixed(2)} km
+                        </div>
+                      </Tooltip>
+                    </Marker>
+                  )}
                 </React.Fragment>
               );
             })}

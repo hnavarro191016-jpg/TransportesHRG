@@ -126,56 +126,80 @@ const createEndIcon = (label = 'B') => new L.divIcon({
 const getSampledDirectionArrows = (coords, color = '#2563eb') => {
   if (!coords || coords.length < 2) return [];
   const arrows = [];
-  const totalKm = getTotalDistance(coords);
   
-  // Espaciado mucho más frecuente y detallado:
-  // - Rutas largas (> 40 km): cada 800 metros (0.8 km)
-  // - Rutas medianas (10 a 40 km): cada 500 metros (0.5 km)
-  // - Rutas cortas / ciudad (< 10 km): cada 250 metros (0.25 km)
-  const minSpacingKm = totalKm > 40 ? 0.8 : (totalKm > 10 ? 0.5 : 0.25);
+  // En ciudad, una cuadra mide entre 60m y 100m. 
+  // Usamos espaciado base de 80 metros y detección de giros/vueltas en esquinas.
+  const minSpacingKm = 0.08; // 80 metros entre flechas
+  const turnThresholdDeg = 25; // Si la trayectoria gira más de 25 grados (vuelta a otra calle)
+  
   let accumulatedDist = 0;
+  let lastBearing = null;
+  let lastArrowPoint = null;
 
   for (let i = 0; i < coords.length - 1; i++) {
     const p1 = coords[i];
     const p2 = coords[i + 1];
     const segDist = calculateDistance(p1[0], p1[1], p2[0], p2[1]);
+    
+    // Ignorar micro-ruido de GPS estático (< 5 metros)
+    if (segDist < 0.005) continue;
+
+    const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
     accumulatedDist += segDist;
 
-    // Si el segmento entre 2 puntos GPS es largo (ej. carretera recta con pocos pings),
-    // interpolar varias flechas a lo largo del segmento para que no quede vacío
-    if (segDist >= minSpacingKm * 1.5) {
-      const numArrows = Math.min(8, Math.floor(segDist / minSpacingKm));
-      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-      for (let s = 1; s <= numArrows; s++) {
-        const fraction = s / (numArrows + 1);
+    // Detectar si hubo una vuelta o cambio de calle
+    let isTurn = false;
+    if (lastBearing !== null) {
+      let diffAngle = Math.abs(bearing - lastBearing);
+      if (diffAngle > 180) diffAngle = 360 - diffAngle;
+      if (diffAngle >= turnThresholdDeg) {
+        isTurn = true;
+      }
+    }
+
+    const midLat = (p1[0] + p2[0]) / 2;
+    const midLng = (p1[1] + p2[1]) / 2;
+    const distFromLastArrow = lastArrowPoint 
+      ? calculateDistance(lastArrowPoint[0], lastArrowPoint[1], midLat, midLng)
+      : 999;
+
+    // 1. Si es un tramo recto largo (ej. avenida larga o carretera > 160m),
+    // colocar flechas intermedias cada ~100m para que no queden huecos
+    if (segDist >= 0.16) {
+      const numSteps = Math.min(10, Math.floor(segDist / 0.10));
+      for (let s = 1; s <= numSteps; s++) {
+        const fraction = s / (numSteps + 1);
         const lat = p1[0] + (p2[0] - p1[0]) * fraction;
         const lng = p1[1] + (p2[1] - p1[1]) * fraction;
         arrows.push({
-          key: `arr-${i}-${s}-${lat.toFixed(4)}-${lng.toFixed(4)}`,
+          key: `arr-step-${i}-${s}-${lat.toFixed(5)}-${lng.toFixed(5)}`,
           lat,
           lng,
           bearing,
           color
         });
+        lastArrowPoint = [lat, lng];
       }
       accumulatedDist = 0;
-    } else if (accumulatedDist >= minSpacingKm) {
-      const midLat = (p1[0] + p2[0]) / 2;
-      const midLng = (p1[1] + p2[1]) / 2;
-      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-
+      lastBearing = bearing;
+    }
+    // 2. Si hubo un giro de calle (al menos 35m de la flecha anterior) O si se acumularon ~80 metros
+    else if ((isTurn && distFromLastArrow >= 0.035) || accumulatedDist >= minSpacingKm) {
       arrows.push({
-        key: `arr-${i}-${midLat.toFixed(4)}-${midLng.toFixed(4)}`,
+        key: `arr-${i}-${midLat.toFixed(5)}-${midLng.toFixed(5)}`,
         lat: midLat,
         lng: midLng,
         bearing,
         color
       });
+
+      lastArrowPoint = [midLat, midLng];
+      lastBearing = bearing;
       accumulatedDist = 0;
     }
   }
 
-  // Si no se agregó ninguna flecha (ej. viaje ultra corto), agregar al menos una en el punto medio
+  // Si no se agregó ninguna flecha (ej. viaje ultra corto de una sola cuadra), colocar una en el punto medio
   if (arrows.length === 0 && coords.length >= 2) {
     const p1 = coords[0];
     const p2 = coords[coords.length - 1];

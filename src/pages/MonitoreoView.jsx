@@ -128,8 +128,11 @@ const getSampledDirectionArrows = (coords, color = '#2563eb') => {
   const arrows = [];
   const totalKm = getTotalDistance(coords);
   
-  // Espaciado óptimo para mostrar la dirección sin saturar la pantalla
-  const minSpacingKm = totalKm > 30 ? 3.5 : (totalKm > 5 ? 1.5 : 0.6);
+  // Espaciado mucho más frecuente y detallado:
+  // - Rutas largas (> 40 km): cada 800 metros (0.8 km)
+  // - Rutas medianas (10 a 40 km): cada 500 metros (0.5 km)
+  // - Rutas cortas / ciudad (< 10 km): cada 250 metros (0.25 km)
+  const minSpacingKm = totalKm > 40 ? 0.8 : (totalKm > 10 ? 0.5 : 0.25);
   let accumulatedDist = 0;
 
   for (let i = 0; i < coords.length - 1; i++) {
@@ -138,7 +141,25 @@ const getSampledDirectionArrows = (coords, color = '#2563eb') => {
     const segDist = calculateDistance(p1[0], p1[1], p2[0], p2[1]);
     accumulatedDist += segDist;
 
-    if (accumulatedDist >= minSpacingKm) {
+    // Si el segmento entre 2 puntos GPS es largo (ej. carretera recta con pocos pings),
+    // interpolar varias flechas a lo largo del segmento para que no quede vacío
+    if (segDist >= minSpacingKm * 1.5) {
+      const numArrows = Math.min(8, Math.floor(segDist / minSpacingKm));
+      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+      for (let s = 1; s <= numArrows; s++) {
+        const fraction = s / (numArrows + 1);
+        const lat = p1[0] + (p2[0] - p1[0]) * fraction;
+        const lng = p1[1] + (p2[1] - p1[1]) * fraction;
+        arrows.push({
+          key: `arr-${i}-${s}-${lat.toFixed(4)}-${lng.toFixed(4)}`,
+          lat,
+          lng,
+          bearing,
+          color
+        });
+      }
+      accumulatedDist = 0;
+    } else if (accumulatedDist >= minSpacingKm) {
       const midLat = (p1[0] + p2[0]) / 2;
       const midLng = (p1[1] + p2[1]) / 2;
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
@@ -154,7 +175,7 @@ const getSampledDirectionArrows = (coords, color = '#2563eb') => {
     }
   }
 
-  // Si no se agregó ninguna flecha (ej. viaje muy corto), agregar al menos una en el punto medio
+  // Si no se agregó ninguna flecha (ej. viaje ultra corto), agregar al menos una en el punto medio
   if (arrows.length === 0 && coords.length >= 2) {
     const p1 = coords[0];
     const p2 = coords[coords.length - 1];

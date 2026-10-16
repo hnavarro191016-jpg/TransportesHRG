@@ -10,13 +10,19 @@ const truckSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fi
 const getTruckIcon = (last_updated) => {
   const isOffline = (new Date() - new Date(last_updated)) > 180000; 
   const bgColor = isOffline ? '#64748b' : '#16a34a'; 
+  const size = isOffline ? 22 : 44; // 50% más pequeño cuando está inactivo
+  const anchor = isOffline ? 11 : 22;
+  const padding = isOffline ? 2 : 4;
+  const borderWidth = isOffline ? 2 : 3;
+  const opacity = isOffline ? 0.8 : 1;
+  const shadow = isOffline ? '0 2px 4px rgba(0,0,0,0.3)' : '0 4px 8px rgba(0,0,0,0.4)';
   
   return new L.divIcon({
     className: 'custom-truck-icon',
-    html: `<div style="background-color: ${bgColor}; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.4); border: 3px solid white; padding: 4px; transition: all 0.3s;">${truckSvg}</div>`,
-    iconSize: [44, 44],
-    iconAnchor: [22, 22],
-    popupAnchor: [0, -22],
+    html: `<div style="background-color: ${bgColor}; width: ${size}px; height: ${size}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: ${shadow}; border: ${borderWidth}px solid white; padding: ${padding}px; opacity: ${opacity}; transition: all 0.3s;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" style="width: 100%; height: 100%; display: block;"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>`,
+    iconSize: [size, size],
+    iconAnchor: [anchor, anchor],
+    popupAnchor: [0, -anchor],
   });
 };
 
@@ -546,6 +552,7 @@ export const MonitoreoView = () => {
   const [selectedTripId, setSelectedTripId] = useState(null);
   const [panTarget, setPanTarget] = useState(null); // 'menu', 'live', 'history'
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [onlyActiveUnits, setOnlyActiveUnits] = useState(false);
   
   const [locations, setLocations] = useState([]);
   const [history, setHistory] = useState({});
@@ -765,6 +772,19 @@ export const MonitoreoView = () => {
     }).sort((a, b) => a.name.localeCompare(b.name));
   }, [validLocations, history, operatorDetails]);
 
+  const activeTrucksCount = useMemo(() => {
+    return validLocations.filter(loc => (new Date() - new Date(loc.last_updated)) <= 180000).length;
+  }, [validLocations]);
+
+  const liveOperators = useMemo(() => {
+    if (!onlyActiveUnits) return uniqueOperators;
+    return uniqueOperators.filter(op => {
+      const loc = validLocations.find(l => String(l.telegram_id) === String(op.id));
+      if (!loc) return false;
+      return (new Date() - new Date(loc.last_updated)) <= 180000;
+    });
+  }, [uniqueOperators, validLocations, onlyActiveUnits]);
+
   const allDistances = useMemo(() => {
     const list = [];
     Object.entries(history).forEach(([tid, trips]) => {
@@ -919,36 +939,86 @@ export const MonitoreoView = () => {
   if (activeView === 'live') {
     return (
       <div style={{ padding: '16px', minHeight: 'calc(100dvh - 100px)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '14px', flexWrap: 'wrap' }}>
           <button onClick={() => setActiveView('menu')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569' }}>
             <ArrowLeft size={18} /> Volver
           </button>
           <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold' }}>Live Tracking</h2>
-                      <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '4px 12px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
-              <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
-              REC Live
-            </div>
+          <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '4px 12px', borderRadius: '999px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', animation: 'pulse 2s infinite' }}>
+            <div style={{ width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
+            REC Live
+          </div>
+
+          {/* Botón para alternar solo unidades activas (verdes) */}
+          <button
+            onClick={() => {
+              setOnlyActiveUnits(prev => {
+                const nextVal = !prev;
+                if (nextVal && selectedLiveTruck) {
+                  const activeTruck = validLocations.find(l => String(l.telegram_id) === String(selectedLiveTruck));
+                  const isOnline = activeTruck && (new Date() - new Date(activeTruck.last_updated)) <= 180000;
+                  if (!isOnline) setSelectedLiveTruck(null);
+                }
+                return nextVal;
+              });
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 14px',
+              backgroundColor: onlyActiveUnits ? '#16a34a' : 'white',
+              color: onlyActiveUnits ? 'white' : '#1e293b',
+              border: onlyActiveUnits ? '1px solid #15803d' : '1px solid #cbd5e1',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px',
+              boxShadow: onlyActiveUnits ? '0 2px 6px rgba(22, 163, 74, 0.35)' : '0 1px 2px rgba(0,0,0,0.05)',
+              transition: 'all 0.15s ease'
+            }}
+            title={onlyActiveUnits ? 'Mostrando únicamente unidades activas (verdes). Clic para ver todas.' : 'Clic para filtrar y ver únicamente las unidades activas (verdes)'}
+          >
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: onlyActiveUnits ? 'white' : '#16a34a',
+              boxShadow: onlyActiveUnits ? '0 0 6px white' : '0 0 4px #16a34a'
+            }} />
+            <span>{onlyActiveUnits ? '✓ Solo unidades activas' : 'Solo ver Unidades activas'}</span>
+            <span style={{
+              backgroundColor: onlyActiveUnits ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+              color: onlyActiveUnits ? 'white' : '#475569',
+              padding: '1px 7px',
+              borderRadius: '999px',
+              fontSize: '11px',
+              fontWeight: '700'
+            }}>
+              {activeTrucksCount}
+            </span>
+          </button>
             
-            <div style={{ marginLeft: '16px', display: 'flex', alignItems: 'center', width: '280px' }}>
-              <OperatorSearchSelect 
-                value={selectedLiveTruck || 'ALL'}
-                onChange={(tid) => {
-                  if (!tid || tid === 'ALL') {
-                    setSelectedLiveTruck(null);
-                    return;
-                  }
-                  setSelectedLiveTruck(String(tid));
-                  const loc = validLocations.find(l => String(l.telegram_id) === String(tid));
-                  if (loc) {
-                    setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() });
-                  }
-                }}
-                operators={uniqueOperators}
-                allLabel="Todos los Operadores"
-                placeholder="Buscar operador en vivo..."
-                isCompact={false}
-              />
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', width: '280px' }}>
+            <OperatorSearchSelect 
+              value={selectedLiveTruck || 'ALL'}
+              onChange={(tid) => {
+                if (!tid || tid === 'ALL') {
+                  setSelectedLiveTruck(null);
+                  return;
+                }
+                setSelectedLiveTruck(String(tid));
+                const loc = validLocations.find(l => String(l.telegram_id) === String(tid));
+                if (loc) {
+                  setPanTarget({ lat: loc.latitude, lng: loc.longitude, ts: Date.now() });
+                }
+              }}
+              operators={liveOperators}
+              allLabel={onlyActiveUnits ? `Solo activas (${liveOperators.length})` : "Todos los Operadores"}
+              placeholder="Buscar operador en vivo..."
+              isCompact={false}
+            />
+          </div>
           <button onClick={() => setIsFullScreen(true)} style={{ marginLeft: 'auto', padding: '8px 16px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
             Pantalla Completa
           </button>
@@ -1104,7 +1174,13 @@ export const MonitoreoView = () => {
                   });
                 })()}
   
-                {validLocations.filter(loc => !selectedLiveTruck || String(loc.telegram_id) === String(selectedLiveTruck)).map((loc) => {
+                {validLocations
+                  .filter(loc => !selectedLiveTruck || String(loc.telegram_id) === String(selectedLiveTruck))
+                  .filter(loc => {
+                    if (!onlyActiveUnits) return true;
+                    return (new Date() - new Date(loc.last_updated)) <= 180000;
+                  })
+                  .map((loc) => {
                   return (
                     <Marker 
                       key={"live-" + loc.telegram_id} 

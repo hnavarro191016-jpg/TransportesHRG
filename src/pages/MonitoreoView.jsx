@@ -129,6 +129,115 @@ const createEndIcon = (label = 'B') => new L.divIcon({
   iconAnchor: [11, 11]
 });
 
+const createSignalLostIcon = () => new L.divIcon({
+  className: 'custom-signal-lost-marker',
+  html: `
+    <div style="
+      background-color: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      cursor: pointer;
+    " title="Pérdida de señal GPS">!</div>
+  `,
+  iconSize: [18, 18],
+  iconAnchor: [9, 9]
+});
+
+const createSignalRestoredIcon = () => new L.divIcon({
+  className: 'custom-signal-restored-marker',
+  html: `
+    <div style="
+      background-color: #10b981;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      cursor: pointer;
+    " title="Señal GPS restablecida">✓</div>
+  `,
+  iconSize: [18, 18],
+  iconAnchor: [9, 9]
+});
+
+const parseTripSegmentsAndGaps = (rawPoints) => {
+  if (!rawPoints || rawPoints.length === 0) return { segments: [], gaps: [], allCoords: [] };
+  
+  const segments = [];
+  const gaps = [];
+  let currentSegment = [{
+    lat: Number(rawPoints[0].lat),
+    lng: Number(rawPoints[0].lng),
+    time: rawPoints[0].time ? new Date(rawPoints[0].time) : new Date()
+  }];
+  
+  for (let i = 1; i < rawPoints.length; i++) {
+    const prev = currentSegment[currentSegment.length - 1];
+    const curr = {
+      lat: Number(rawPoints[i].lat),
+      lng: Number(rawPoints[i].lng),
+      time: rawPoints[i].time ? new Date(rawPoints[i].time) : new Date()
+    };
+    
+    const deltaTSeconds = Math.max(0, (curr.time.getTime() - prev.time.getTime()) / 1000);
+    const deltaDKm = calculateDistance(prev.lat, prev.lng, curr.lat, curr.lng);
+    
+    // Criterios para detectar corte o desconexión de señal:
+    // 1. Más de 3.5 min (210s) sin reporte y desplazamiento > 300m
+    // 2. Más de 7 min (420s) sin reporte y desplazamiento > 100m
+    // 3. Salto en línea recta > 1.0 km con más de 45 segundos (faltan puntos de calle/avenida)
+    // 4. Velocidad aparente inverosímil (>130 km/h) indicativa de salto por reconexión
+    const isGap = 
+      (deltaTSeconds >= 210 && deltaDKm >= 0.3) ||
+      (deltaTSeconds >= 420 && deltaDKm >= 0.1) ||
+      (deltaDKm >= 1.0 && deltaTSeconds >= 45) ||
+      (deltaTSeconds > 10 && (deltaDKm / (deltaTSeconds / 3600)) > 130);
+      
+    if (isGap) {
+      if (currentSegment.length > 0) {
+        segments.push(currentSegment.map(p => [p.lat, p.lng]));
+      }
+      
+      const durationMin = Math.max(1, Math.round(deltaTSeconds / 60));
+      gaps.push({
+        id: `gap-${i}-${deltaTSeconds}`,
+        from: [prev.lat, prev.lng],
+        to: [curr.lat, curr.lng],
+        timeFrom: prev.time,
+        timeTo: curr.time,
+        durationMin,
+        distanceKm: deltaDKm
+      });
+      
+      currentSegment = [curr];
+    } else {
+      currentSegment.push(curr);
+    }
+  }
+  
+  if (currentSegment.length > 0) {
+    segments.push(currentSegment.map(p => [p.lat, p.lng]));
+  }
+  
+  const allCoords = rawPoints.map(p => [Number(p.lat), Number(p.lng)]);
+  return { segments, gaps, allCoords };
+};
+
 const getSampledDirectionArrows = (coords, color = '#2563eb', targetCount = 30) => {
   if (!coords || coords.length < 2) return [];
   const totalKm = getTotalDistance(coords);
@@ -803,8 +912,9 @@ export const MonitoreoView = () => {
         
       let totalDistance = 0;
       const parsedTrips = trips.map((trip, idx) => {
-          const coords = trip.map(p => [Number(p.lat), Number(p.lng)]);
-          const distance = getTotalDistance(coords);
+          const { segments, gaps, allCoords } = parseTripSegmentsAndGaps(trip);
+          const distance = segments.reduce((sum, seg) => sum + getTotalDistance(seg), 0) + 
+                           gaps.reduce((sum, gap) => sum + gap.distanceKm, 0);
           totalDistance += distance;
           return {
              id: `${tidStr}-trip-${idx}`,
@@ -812,7 +922,10 @@ export const MonitoreoView = () => {
              startTime: trip[0].time,
              endTime: trip[trip.length-1].time,
              distance,
-             coords,
+             coords: allCoords,
+             segments,
+             gaps,
+             rawPoints: trip,
              colors: ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#dc2626'][idx % 5]
           };
       });
@@ -1113,6 +1226,24 @@ export const MonitoreoView = () => {
                       </div>
                     )}
                   </div>
+
+                  {activeDist?.trips?.some(t => t.gaps && t.gaps.length > 0) && (
+                    <div style={{ 
+                      marginTop: '8px', 
+                      padding: '5px 8px', 
+                      backgroundColor: '#fef3c7', 
+                      borderRadius: '6px', 
+                      border: '1px solid #fde68a', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px', 
+                      fontSize: '11px', 
+                      color: '#92400e' 
+                    }}>
+                      <span>⚠️</span>
+                      <span>Señal interrumpida en tramos (línea punteada ámbar)</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -1130,37 +1261,135 @@ export const MonitoreoView = () => {
                   if (!driverData || !driverData.trips || driverData.trips.length === 0) return null;
 
                   return driverData.trips.map((trip, idx) => {
-                    let coords = trip.coords;
-                    if (idx === driverData.trips.length - 1 && currentLoc) {
-                      const lastPoint = coords[coords.length - 1];
-                      if (!lastPoint || (lastPoint[0] !== currentLoc.latitude || lastPoint[1] !== currentLoc.longitude)) {
-                        coords = [...coords, [currentLoc.latitude, currentLoc.longitude]];
+                    const isLastTrip = idx === driverData.trips.length - 1;
+                    let liveSegments = trip.segments ? [...trip.segments] : [];
+                    let liveGaps = trip.gaps ? [...trip.gaps] : [];
+
+                    if (isLastTrip && currentLoc && trip.rawPoints && trip.rawPoints.length > 0) {
+                      const lastRawPoint = trip.rawPoints[trip.rawPoints.length - 1];
+                      const currLat = Number(currentLoc.latitude);
+                      const currLng = Number(currentLoc.longitude);
+                      const currTime = currentLoc.last_updated ? new Date(currentLoc.last_updated) : new Date();
+
+                      const isDifferent = Math.abs(currLat - lastRawPoint.lat) > 0.0001 || Math.abs(currLng - lastRawPoint.lng) > 0.0001;
+                      if (isDifferent) {
+                        const deltaTSeconds = Math.max(0, (currTime.getTime() - new Date(lastRawPoint.time).getTime()) / 1000);
+                        const deltaDKm = calculateDistance(lastRawPoint.lat, lastRawPoint.lng, currLat, currLng);
+
+                        const isGap = 
+                          (deltaTSeconds >= 210 && deltaDKm >= 0.3) ||
+                          (deltaTSeconds >= 420 && deltaDKm >= 0.1) ||
+                          (deltaDKm >= 1.0 && deltaTSeconds >= 45) ||
+                          (deltaTSeconds > 10 && (deltaDKm / (deltaTSeconds / 3600)) > 130);
+
+                        if (isGap) {
+                          const durationMin = Math.max(1, Math.round(deltaTSeconds / 60));
+                          liveGaps = [...liveGaps, {
+                            id: `live-gap-current`,
+                            from: [lastRawPoint.lat, lastRawPoint.lng],
+                            to: [currLat, currLng],
+                            timeFrom: new Date(lastRawPoint.time),
+                            timeTo: currTime,
+                            durationMin,
+                            distanceKm: deltaDKm
+                          }];
+                          liveSegments = [...liveSegments, [[currLat, currLng]]];
+                        } else {
+                          if (liveSegments.length > 0) {
+                            const lastSeg = [...liveSegments[liveSegments.length - 1], [currLat, currLng]];
+                            liveSegments[liveSegments.length - 1] = lastSeg;
+                          } else {
+                            liveSegments = [[[lastRawPoint.lat, lastRawPoint.lng], [currLat, currLng]]];
+                          }
+                        }
                       }
                     }
-                    if (coords.length < 2) return null;
-
-                    const arrows = getSampledDirectionArrows(coords, '#2563eb', 30);
 
                     return (
                       <React.Fragment key={`live-hist-group-${trip.id}`}>
-                        {/* Contorno exterior para resaltar sobre el mapa */}
-                        <Polyline positions={coords} color="#1d4ed8" weight={8} opacity={0.3} smoothFactor={1} />
-                        {/* Trazo principal azul vibrante */}
-                        <Polyline positions={coords} color="#2563eb" weight={4} opacity={0.9} smoothFactor={1} />
+                        {/* Segmentos continuos de la ruta (color azul) */}
+                        {liveSegments.map((segCoords, sIdx) => {
+                          if (segCoords.length < 2) return null;
+                          const segDist = getTotalDistance(segCoords);
+                          const segRatio = trip.distance > 0 ? (segDist / trip.distance) : 1;
+                          const segTargetArrows = Math.max(1, Math.round(25 * segRatio));
+                          const arrows = getSampledDirectionArrows(segCoords, '#2563eb', segTargetArrows);
 
-                        {/* Flechitas de sentido de recorrido */}
-                        {arrows.map(arr => (
-                          <Marker
-                            key={arr.key}
-                            position={[arr.lat, arr.lng]}
-                            icon={createArrowIcon(arr.bearing, '#2563eb')}
-                            interactive={false}
-                          />
+                          return (
+                            <React.Fragment key={`live-seg-${trip.id}-${sIdx}`}>
+                              {/* Contorno exterior para resaltar sobre el mapa */}
+                              <Polyline positions={segCoords} color="#1d4ed8" weight={8} opacity={0.3} smoothFactor={1} />
+                              {/* Trazo principal azul vibrante */}
+                              <Polyline positions={segCoords} color="#2563eb" weight={4} opacity={0.9} smoothFactor={1} />
+
+                              {/* Flechitas direccionales solo en trayectos reales */}
+                              {arrows.map(arr => (
+                                <Marker
+                                  key={arr.key}
+                                  position={[arr.lat, arr.lng]}
+                                  icon={createArrowIcon(arr.bearing, '#2563eb')}
+                                  interactive={false}
+                                />
+                              ))}
+                            </React.Fragment>
+                          );
+                        })}
+
+                        {/* Brechas de desconexión / pérdida de señal (línea punteada ámbar) */}
+                        {liveGaps.map((gap, gIdx) => (
+                          <React.Fragment key={`live-gap-${trip.id}-${gIdx}`}>
+                            <Polyline
+                              positions={[gap.from, gap.to]}
+                              color="#f59e0b"
+                              weight={3}
+                              opacity={0.85}
+                              dashArray="6, 8"
+                            >
+                              <Tooltip sticky direction="top">
+                                <div style={{ fontSize: '11px', padding: '3px 5px', minWidth: '180px' }}>
+                                  <div style={{ fontWeight: 700, color: '#b45309', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                                    <span>⚠️</span> Desconexión de señal GPS
+                                  </div>
+                                  <div style={{ color: '#334155', fontSize: '11px', lineHeight: '1.4' }}>
+                                    <strong>Duración:</strong> ~{gap.durationMin} min<br />
+                                    <strong>Distancia:</strong> ~{gap.distanceKm.toFixed(2)} km sin señal
+                                  </div>
+                                  <div style={{ color: '#64748b', fontSize: '10px', marginTop: '3px', borderTop: '1px dashed #e2e8f0', paddingTop: '2px' }}>
+                                    {gap.timeFrom ? new Date(gap.timeFrom).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''} 
+                                    {' → '} 
+                                    {gap.timeTo ? new Date(gap.timeTo).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                  </div>
+                                </div>
+                              </Tooltip>
+                            </Polyline>
+
+                            <Marker position={gap.from} icon={createSignalLostIcon()}>
+                              <Tooltip direction="top" offset={[0, -8]}>
+                                <div style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626' }}>
+                                  📡 Señal perdida aquí<br />
+                                  <span style={{ color: '#64748b', fontWeight: 400 }}>
+                                    {gap.timeFrom ? new Date(gap.timeFrom).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                  </span>
+                                </div>
+                              </Tooltip>
+                            </Marker>
+
+                            <Marker position={gap.to} icon={createSignalRestoredIcon()}>
+                              <Tooltip direction="top" offset={[0, -8]}>
+                                <div style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a' }}>
+                                  📶 Señal restablecida aquí<br />
+                                  <span style={{ color: '#64748b', fontWeight: 400 }}>
+                                    {gap.timeTo ? new Date(gap.timeTo).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                  </span>
+                                </div>
+                              </Tooltip>
+                            </Marker>
+                          </React.Fragment>
                         ))}
 
                         {/* Punto A (Inicio del recorrido) */}
-                        {coords[0] && (
-                          <Marker position={coords[0]} icon={createStartIcon('A')}>
+                        {trip.coords && trip.coords[0] && (
+                          <Marker position={trip.coords[0]} icon={createStartIcon('A')}>
                             <Tooltip permanent={false} direction="top" offset={[0, -12]}>
                               <div style={{ fontSize: '11px', fontWeight: 600 }}>
                                 🟢 <strong>Inicio del recorrido</strong><br />
@@ -1341,7 +1570,7 @@ export const MonitoreoView = () => {
                                 cursor: 'pointer'
                               }}
                             >
-                              <td style={{ padding: '2px 2px', width: '20px' }}>
+                              <td style={{ padding: '2px 2px', width: '24px' }}>
                                 <span style={{ 
                                   backgroundColor: trip.colors, 
                                   color: 'white', 
@@ -1353,6 +1582,23 @@ export const MonitoreoView = () => {
                                 }}>
                                   #{trip.num}
                                 </span>
+                                {trip.gaps && trip.gaps.length > 0 && (
+                                  <span 
+                                    title={`${trip.gaps.length} corte(s) de señal GPS`}
+                                    style={{
+                                      backgroundColor: '#fef3c7',
+                                      color: '#b45309',
+                                      border: '1px solid #fde68a',
+                                      borderRadius: '3px',
+                                      padding: '1px 3px',
+                                      fontSize: '8px',
+                                      fontWeight: '700',
+                                      marginLeft: '2px'
+                                    }}
+                                  >
+                                    ⚠️{trip.gaps.length}
+                                  </span>
+                                )}
                               </td>
                               <td style={{ padding: '2px 4px', fontSize: '10px', fontWeight: isSelected ? '600' : '400', whiteSpace: 'nowrap' }}>
                                 {trip.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {trip.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -1418,36 +1664,98 @@ export const MonitoreoView = () => {
               const isSelected = selectedTripId === trip.id;
               const tripColor = trip.colors || '#2563eb';
               const shouldRenderArrows = (operatorFilter !== 'ALL' || Boolean(selectedTripId));
-              const arrows = shouldRenderArrows ? getSampledDirectionArrows(trip.coords, tripColor, 30) : [];
 
               return (
                 <React.Fragment key={`hist-group-${trip.id}`}>
-                  {isSelected && (
-                    <Polyline 
-                      positions={trip.coords} 
-                      color="#1e293b" 
-                      weight={8} 
-                      opacity={0.3} 
-                      smoothFactor={1} 
-                    />
-                  )}
-                  <Polyline 
-                    key={`hist-line-${trip.id}`} 
-                    positions={trip.coords} 
-                    color={tripColor} 
-                    weight={isSelected ? 5 : 4} 
-                    opacity={0.85} 
-                    smoothFactor={1} 
-                  />
+                  {/* Segmentos continuos de la ruta */}
+                  {trip.segments && trip.segments.map((segCoords, sIdx) => {
+                    if (segCoords.length < 2) return null;
+                    const segDist = getTotalDistance(segCoords);
+                    const segRatio = trip.distance > 0 ? (segDist / trip.distance) : 1;
+                    const segTargetArrows = Math.max(1, Math.round(25 * segRatio));
+                    const arrows = shouldRenderArrows ? getSampledDirectionArrows(segCoords, tripColor, segTargetArrows) : [];
 
-                  {/* Flechitas indicadoras de dirección del recorrido */}
-                  {arrows.map(arr => (
-                    <Marker
-                      key={arr.key}
-                      position={[arr.lat, arr.lng]}
-                      icon={createArrowIcon(arr.bearing, tripColor)}
-                      interactive={false}
-                    />
+                    return (
+                      <React.Fragment key={`hist-seg-${trip.id}-${sIdx}`}>
+                        {isSelected && (
+                          <Polyline 
+                            positions={segCoords} 
+                            color="#1e293b" 
+                            weight={8} 
+                            opacity={0.3} 
+                            smoothFactor={1} 
+                          />
+                        )}
+                        <Polyline 
+                          key={`hist-line-${trip.id}-${sIdx}`} 
+                          positions={segCoords} 
+                          color={tripColor} 
+                          weight={isSelected ? 5 : 4} 
+                          opacity={0.85} 
+                          smoothFactor={1} 
+                        />
+                        {arrows.map(arr => (
+                          <Marker
+                            key={arr.key}
+                            position={[arr.lat, arr.lng]}
+                            icon={createArrowIcon(arr.bearing, tripColor)}
+                            interactive={false}
+                          />
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
+
+                  {/* Brechas de desconexión / pérdida de señal (línea punteada ámbar) */}
+                  {trip.gaps && trip.gaps.map((gap, gIdx) => (
+                    <React.Fragment key={`hist-gap-${trip.id}-${gIdx}`}>
+                      <Polyline
+                        positions={[gap.from, gap.to]}
+                        color="#f59e0b"
+                        weight={3}
+                        opacity={0.85}
+                        dashArray="6, 8"
+                      >
+                        <Tooltip sticky direction="top">
+                          <div style={{ fontSize: '11px', padding: '3px 5px', minWidth: '180px' }}>
+                            <div style={{ fontWeight: 700, color: '#b45309', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                              <span>⚠️</span> Desconexión de señal GPS
+                            </div>
+                            <div style={{ color: '#334155', fontSize: '11px', lineHeight: '1.4' }}>
+                              <strong>Duración:</strong> ~{gap.durationMin} min<br />
+                              <strong>Distancia:</strong> ~{gap.distanceKm.toFixed(2)} km sin señal
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: '10px', marginTop: '3px', borderTop: '1px dashed #e2e8f0', paddingTop: '2px' }}>
+                              {gap.timeFrom ? new Date(gap.timeFrom).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''} 
+                              {' → '} 
+                              {gap.timeTo ? new Date(gap.timeTo).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                          </div>
+                        </Tooltip>
+                      </Polyline>
+
+                      <Marker position={gap.from} icon={createSignalLostIcon()}>
+                        <Tooltip direction="top" offset={[0, -8]}>
+                          <div style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626' }}>
+                            📡 Señal perdida aquí<br />
+                            <span style={{ color: '#64748b', fontWeight: 400 }}>
+                              {gap.timeFrom ? new Date(gap.timeFrom).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </span>
+                          </div>
+                        </Tooltip>
+                      </Marker>
+
+                      <Marker position={gap.to} icon={createSignalRestoredIcon()}>
+                        <Tooltip direction="top" offset={[0, -8]}>
+                          <div style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a' }}>
+                            📶 Señal restablecida aquí<br />
+                            <span style={{ color: '#64748b', fontWeight: 400 }}>
+                              {gap.timeTo ? new Date(gap.timeTo).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </span>
+                          </div>
+                        </Tooltip>
+                      </Marker>
+                    </React.Fragment>
                   ))}
 
                   {/* Punto de Inicio (A) */}

@@ -22,6 +22,8 @@
   - `createStartIcon('A')` y marcador de fin ('B').
 - **Subagente_Telemetria_Alertas**:
   - Cálculo de velocidad actual (`speed`), visualización de alertas por desconexión prolongada y purga en base de datos.
+  - `parseTripSegmentsAndGaps(rawPoints)`: Segmentación inteligente de trayectos continuos vs. brechas de desconexión (`gaps`).
+  - `createSignalLostIcon()` y `createSignalRestoredIcon()`: Marcadores visuales de interrupción y restablecimiento de señal satelital/Telegram.
 
 ## 3. Dependencias
 - Librerías: `leaflet`, `react-leaflet`, `lucide-react`.
@@ -32,6 +34,7 @@
 - Un camión se considera fuera de línea si no reporta ping en más de 180,000 ms (3 minutos).
 - Las flechas del recorrido se deben colocar a intervalos representativos de distancia/tiempo para no saturar el renderizado DOM del mapa Leaflet.
 - El historial debe podarse para no degradar el rendimiento de la base de datos Supabase.
+- **Pérdida de Señal y Gaps en Ruta**: Nunca se debe conectar con línea sólida un salto donde se perdió la señal GPS (>3.5 min y >300m, >7 min y >100m, o salto >1.0 km sin pings). Estos tramos deben dibujarse con línea punteada ámbar (`#f59e0b`, `dashArray: '6, 8'`), tooltip explicativo con minutos y km transcurridos sin señal, y marcadores de corte y reconexión para no simular calles inexistentes.
 
 ## 5. Pruebas y Validación
 - Verificar que Leaflet CSS se mantenga cargado (`leaflet/dist/leaflet.css`).

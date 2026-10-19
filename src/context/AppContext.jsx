@@ -26,23 +26,68 @@ export const AppProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [isSupabaseOnline, setIsSupabaseOnline] = useState(false);
 
+  const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
+  const STORAGE_KEY_LAST_ACTIVITY = 'romo_last_activity';
+
+  const addToast = (message, type = 'success') => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   useEffect(() => {
     if (isSupabaseConfigured()) {
       setIsSupabaseOnline(true);
       
-      // Get initial session
+      // Get initial session con validación de inactividad de 30 min
       supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        if (session) fetchCurrentUser(session.user);
-        else setAuthLoading(false);
+        if (session) {
+          const lastActivityStr = localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY);
+          const now = Date.now();
+          if (lastActivityStr && (now - Number(lastActivityStr)) > INACTIVITY_TIMEOUT_MS) {
+            console.warn('Sesión previa expirada por inactividad (>30 minutos).');
+            localStorage.removeItem(STORAGE_KEY_LAST_ACTIVITY);
+            localStorage.removeItem('activeModule');
+            localStorage.removeItem('currentView');
+            supabase.auth.signOut().finally(() => {
+              setSession(null);
+              setActiveUser(null);
+              setActiveRole(null);
+              setAuthLoading(false);
+              addToast('Tu sesión ha expirado por inactividad (30 minutos).', 'warning');
+            });
+            return;
+          }
+          localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, now.toString());
+          setSession(session);
+          fetchCurrentUser(session.user);
+        } else {
+          localStorage.removeItem(STORAGE_KEY_LAST_ACTIVITY);
+          setAuthLoading(false);
+        }
       });
 
       // Listen for auth changes
-      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
         if (session) {
+          const lastActivityStr = localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY);
+          const now = Date.now();
+          if (event !== 'SIGNED_IN' && lastActivityStr && (now - Number(lastActivityStr)) > INACTIVITY_TIMEOUT_MS) {
+            localStorage.removeItem(STORAGE_KEY_LAST_ACTIVITY);
+            supabase.auth.signOut();
+            return;
+          }
+          localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, now.toString());
+          setSession(session);
           fetchCurrentUser(session.user);
         } else {
+          localStorage.removeItem(STORAGE_KEY_LAST_ACTIVITY);
           setActiveUser(null);
           setActiveRole(null);
           setAuthLoading(false);
@@ -113,6 +158,7 @@ export const AppProvider = ({ children }) => {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email: finalEmail, password });
     if (error) throw error;
+    localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, Date.now().toString());
     return data;
   };
 
@@ -147,13 +193,62 @@ export const AppProvider = ({ children }) => {
     return authData;
   };
 
-  const logout = async () => {
+  const logout = async (reason = null) => {
     localStorage.removeItem('activeModule');
     localStorage.removeItem('currentView');
+    localStorage.removeItem(STORAGE_KEY_LAST_ACTIVITY);
     if (supabase) {
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.warn('Error during signOut:', err);
+      }
+    }
+    setSession(null);
+    setActiveUser(null);
+    setActiveRole(null);
+    if (reason === 'inactivity') {
+      addToast('Tu sesión ha expirado por inactividad (30 minutos).', 'warning');
     }
   };
+
+  // Monitoreo proactivo de inactividad de 30 minutos mientras la sesión está abierta
+  useEffect(() => {
+    if (!session) return;
+
+    let lastRecorded = Date.now();
+    if (!localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY)) {
+      localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, lastRecorded.toString());
+    }
+
+    const recordUserActivity = () => {
+      const now = Date.now();
+      // Throttle de 10 segundos para no saturar localStorage en cada pixel de mouse
+      if (now - lastRecorded > 10000) {
+        lastRecorded = now;
+        localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, now.toString());
+      }
+    };
+
+    const userEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    userEvents.forEach((ev) => window.addEventListener(ev, recordUserActivity, { passive: true }));
+
+    // Verificación periódica cada 15 segundos
+    const inactivityTimer = setInterval(() => {
+      const stored = localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY);
+      const now = Date.now();
+      const lastAct = stored ? Number(stored) : lastRecorded;
+      if (now - lastAct >= INACTIVITY_TIMEOUT_MS) {
+        clearInterval(inactivityTimer);
+        logout('inactivity');
+      }
+    }, 15000);
+
+    return () => {
+      userEvents.forEach((ev) => window.removeEventListener(ev, recordUserActivity));
+      clearInterval(inactivityTimer);
+    };
+  }, [session]);
 
   useEffect(() => {
     try {
@@ -381,18 +476,6 @@ export const AppProvider = ({ children }) => {
     } catch (err) {
       console.warn('Could not sync from Supabase, using local state:', err);
     }
-  };
-
-  const addToast = (message, type = 'success') => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  };
-
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
   const resetDemoData = () => {

@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "Transportes Romo (HRG)",
+  "version": "1.0.0",
+  "orchestration_protocol": "MASTER_ORCHESTRATOR_V1",
+  "agents_count": 10,
+  "subagents_count": 24,
+  "agents": [
+    {
+      "id": "MASTER_ORCHESTRATOR",
+      "type": "master",
+      "name": "Agente Maestro Orquestador",
+      "role": "Director de Orquesta y Punto Único de Contacto",
+      "memory_file": ".agents/memory/MEMORY_MASTER_ORCHESTRATOR.md",
+      "responsibilities": [
+        "Interpretar solicitudes del usuario",
+        "Consultar agents_manifest.json antes de cualquier análisis",
+        "Prohibir el re-escaneo innecesario de todo el proyecto",
+        "Delegar tareas a los agentes especializados de módulo",
+        "Coordinar ejecución en paralelo para módulos desacoplados",
+        "Serializar modificaciones en archivos compartidos",
+        "Comisionar al Agente QA para validación antes de entregar",
+        "Consolidar y entregar respuesta final al usuario"
+      ]
+    },
+    {
+      "id": "AGENTE_MONITOREO",
+      "type": "module",
+      "name": "Agente de Monitoreo GPS y Telemetría",
+      "role": "Especialista en rastreo satelital en vivo, histórico de viajes y cálculo de rutas",
+      "memory_file": ".agents/memory/MEMORY_MONITOREO.md",
+      "managed_files": [
+        "src/pages/MonitoreoView.jsx",
+        "database/20260922_live_tracking_history_rls.sql",
+        "database/20260922_live_tracking_trigger.sql",
+        "database/20260922_setup_history_pruning.sql"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js"
+      ],
+      "external_libraries": [
+        "leaflet",
+        "react-leaflet",
+        "lucide-react"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_GPS_Live",
+          "function": "Visualización de unidades en tiempo real, estado online/offline y actualización reactiva"
+        },
+        {
+          "name": "Subagente_Recorridos_Historico",
+          "function": "Filtrado por unidad y rango de fechas, polilíneas de viaje y cálculo de distancia total acumulada"
+        },
+        {
+          "name": "Subagente_Geometria_Flechas",
+          "function": "Cálculo matemático de azimut (bearing) y renderizado de flechas SVG direccionales sobre el mapa"
+        },
+        {
+          "name": "Subagente_Telemetria_Alertas",
+          "function": "Monitoreo de velocidad, paradas y mantenimiento de histórico mediante triggers en PostgreSQL"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_MANTENIMIENTOS",
+      "type": "module",
+      "name": "Agente de Mantenimientos y Taller Mecánico",
+      "role": "Especialista en órdenes de servicio, tickets de falla, despacho de piezas y bitácora",
+      "memory_file": ".agents/memory/MEMORY_MANTENIMIENTOS.md",
+      "managed_files": [
+        "src/pages/mantenimientos/MantenimientoDashboard.jsx",
+        "src/pages/mantenimientos/ReporterWizard.jsx",
+        "src/pages/mantenimientos/WorkOrdersView.jsx",
+        "src/pages/mantenimientos/DespachoView.jsx",
+        "src/components/SidebarMantenimiento.jsx",
+        "database/20260914_portal_security_and_maintenance.sql",
+        "PROJECT_PLAN.md"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_Reporter_Operador",
+          "function": "Flujo guiado (Wizard) para operadores: reporte de fallas con clasificación y evidencia fotográfica"
+        },
+        {
+          "name": "Subagente_Taller_Tickets",
+          "function": "Gestión de ciclo de vida de tickets (reported -> in_progress -> resolved -> closed) y diagnóstico técnico"
+        },
+        {
+          "name": "Subagente_Despacho_Refacciones",
+          "function": "Despacho transaccional de refacciones ligadas al ticket mediante RPC record_inventory_movement"
+        },
+        {
+          "name": "Subagente_Metricas_Mantenimiento",
+          "function": "Dashboard de tiempos de atención, costo por unidad vehicular e índice de fallas recurrentes"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_INVENTARIOS",
+      "type": "module",
+      "name": "Agente de Inventarios y Almacenes",
+      "role": "Especialista en catálogo de productos, existencias, entradas, salidas, kardex y auditoría",
+      "memory_file": ".agents/memory/MEMORY_INVENTARIOS.md",
+      "managed_files": [
+        "src/pages/DashboardView.jsx",
+        "src/pages/ProductsView.jsx",
+        "src/pages/CategoriesBrandsView.jsx",
+        "src/pages/WarehousesView.jsx",
+        "src/pages/SuppliersView.jsx",
+        "src/pages/UnitsView.jsx",
+        "src/pages/PurchasesView.jsx",
+        "src/pages/ExitsView.jsx",
+        "src/pages/WorkOrdersView.jsx",
+        "src/pages/PhysicalInventoryView.jsx",
+        "src/pages/KardexView.jsx",
+        "src/pages/AlertsView.jsx",
+        "src/pages/ReportsView.jsx",
+        "src/components/Sidebar.jsx",
+        "src/data/initialData.js",
+        "database/20260914_phase_1_2_operations.sql"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_Stock_Kardex",
+          "function": "Control multi-almacén (romo_inventory_balances), trazabilidad en kardex y saldos"
+        },
+        {
+          "name": "Subagente_Catalogo_Productos",
+          "function": "Altas y edición de repuestos, marcas, compatibilidades de flota, costos y precios"
+        },
+        {
+          "name": "Subagente_Compras_Recepcion",
+          "function": "Recepción de órdenes de compra, control de proveedores y costeo de entradas"
+        },
+        {
+          "name": "Subagente_Ajustes_Fisicos",
+          "function": "Auditorías de conteo físico, conciliación de faltantes/sobrantes y actas de ajuste"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_RECURSOS_HUMANOS",
+      "type": "module",
+      "name": "Agente de Recursos Humanos",
+      "role": "Especialista en expedientes de choferes/mecánicos, asistencias, incidencias y alertas legales",
+      "memory_file": ".agents/memory/MEMORY_RECURSOS_HUMANOS.md",
+      "managed_files": [
+        "src/pages/hr/DashboardHRView.jsx",
+        "src/pages/hr/EmployeesView.jsx",
+        "src/pages/hr/AttendanceView.jsx",
+        "src/pages/hr/DocumentosView.jsx",
+        "src/pages/hr/AlertasView.jsx",
+        "src/components/SidebarHR.jsx"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_Expedientes_Personal",
+          "function": "Ficha completa de personal: CURP, RFC, NSS, licencia de chofer, contactos y tipo de sangre"
+        },
+        {
+          "name": "Subagente_Asistencias",
+          "function": "Registro de checadas, retardos, incidencias y reportes periódicos de asistencia"
+        },
+        {
+          "name": "Subagente_Documentos_Expediente",
+          "function": "Gestión documental de contratos, constancias médicas e identificaciones oficiales"
+        },
+        {
+          "name": "Subagente_Alertas_Laborales",
+          "function": "Monitoreo proactivo de licencias federales por vencer y contratos temporales"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_CAPACITACIONES",
+      "type": "module",
+      "name": "Agente de Capacitaciones y Adiestramiento (LMS)",
+      "role": "Especialista en cursos, exámenes interactivos, progreso por puesto y generación de certificados PDF",
+      "memory_file": ".agents/memory/MEMORY_CAPACITACIONES.md",
+      "managed_files": [
+        "src/pages/capacitaciones/DashboardCapacitacionesView.jsx",
+        "src/pages/capacitaciones/CourseCatalogView.jsx",
+        "src/pages/capacitaciones/MyCoursesView.jsx",
+        "src/pages/capacitaciones/CourseViewerView.jsx",
+        "src/pages/capacitaciones/ExamViewerView.jsx",
+        "src/pages/capacitaciones/AdminCoursesView.jsx",
+        "src/pages/capacitaciones/cursos_hrg_contenido.json",
+        "src/components/SidebarCapacitaciones.jsx",
+        "src/utils/certificateGenerator.js"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_Cursos_Contenido",
+          "function": "Administración del catálogo, lecciones multimedia y banco JSON de cursos oficiales HRG"
+        },
+        {
+          "name": "Subagente_Evaluaciones_Examenes",
+          "function": "Cuestionarios de evaluación, validación de puntaje aprobatorio y control de intentos"
+        },
+        {
+          "name": "Subagente_Certificados_PDF",
+          "function": "Generación y descarga de certificados y diplomas con jsPDF al aprobar cursos"
+        },
+        {
+          "name": "Subagente_Progreso_LMS",
+          "function": "Asignación obligatoria por rol (Operador/Mecánico) y métricas de avance formativo"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_KIOSKO",
+      "type": "module",
+      "name": "Agente de Modo Kiosco",
+      "role": "Especialista en checador digital autónomo para tableta en patio de maniobras",
+      "memory_file": ".agents/memory/MEMORY_KIOSKO.md",
+      "managed_files": [
+        "src/pages/hr/KioskView.jsx",
+        "src/components/CheckInWidget.jsx"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_Kiosko_Checador",
+          "function": "Interfaz simplificada touch para registro veloz de turnos y validación de entrada/salida"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_ADMINISTRACION",
+      "type": "module",
+      "name": "Agente de Administración y Seguridad",
+      "role": "Especialista en gestión de usuarios, roles del portal, reseteo de contraseñas y permisos",
+      "memory_file": ".agents/memory/MEMORY_ADMINISTRACION.md",
+      "managed_files": [
+        "src/pages/UsersView.jsx",
+        "src/pages/ChangePasswordView.jsx",
+        "src/pages/LoginView.jsx",
+        "src/components/SidebarAdmin.jsx",
+        "database/20261005_must_change_password.sql"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_Usuarios_Roles",
+          "function": "Mantenimiento de cuentas en romo_users, control de estatus activo/inactivo y asignación de rol"
+        },
+        {
+          "name": "Subagente_Auth_Seguridad",
+          "function": "Políticas de autenticación Supabase, forzado de cambio de clave inicial y control de acceso RLS"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_INFRAESTRUCTURA_CORE",
+      "type": "core",
+      "name": "Agente de Infraestructura y Servicios Centrales",
+      "role": "Especialista en estado global (AppContext), cliente Supabase, enrutador raíz, CSS y APIs externas",
+      "memory_file": ".agents/memory/MEMORY_INFRAESTRUCTURA_CORE.md",
+      "managed_files": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js",
+        "src/services/googleSheets.js",
+        "src/components/Header.jsx",
+        "src/components/ConfirmModal.jsx",
+        "src/components/ToastNotification.jsx",
+        "src/pages/ModuleHubView.jsx",
+        "src/App.jsx",
+        "src/index.css",
+        "supabase_schema.sql",
+        "supabase/functions/telegram-webhook/index.ts"
+      ],
+      "shared_dependencies": [],
+      "subagents": [
+        {
+          "name": "Subagente_Core_State",
+          "function": "Centralización de estado reactivo en AppContext, sincronización Supabase y persistencia en localStorage"
+        },
+        {
+          "name": "Subagente_Supabase_BD",
+          "function": "Definición de tablas, índices, llaves foráneas, triggers y funciones RPC en PostgreSQL"
+        },
+        {
+          "name": "Subagente_Integraciones_APIs",
+          "function": "Conexión bidireccional con Google Sheets y webhook para notificaciones Telegram"
+        },
+        {
+          "name": "Subagente_UI_Compartida",
+          "function": "Barra de navegación Header, switch de tema oscuro/claro, modales y notificaciones Toast"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_QA",
+      "type": "qa",
+      "name": "Agente de Aseguramiento de Calidad (QA)",
+      "role": "Especialista en verificación de sintaxis, compilación Vite, pruebas de no regresión y validación",
+      "memory_file": ".agents/memory/MEMORY_QA.md",
+      "responsibilities": [
+        "Validar compilación completa con npm run build",
+        "Inspeccionar que no haya importaciones rotas o rutas inexistentes",
+        "Validar que las modificaciones no alteren contratos de datos en AppContext",
+        "Comprobar compatibilidad cruzada entre módulos modificados",
+        "Generar reporte de certificación técnica antes de cerrar la tarea"
+      ]
+    }
+  ]
+}

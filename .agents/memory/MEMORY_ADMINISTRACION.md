@@ -6,6 +6,7 @@
 - `src/pages/LoginView.jsx`: Pantalla de acceso al sistema con autenticación Supabase.
 - `src/components/SidebarAdmin.jsx`: Menú lateral de configuración y administración.
 - `database/20261005_must_change_password.sql`: Migración que añade bandera `must_change_password` en metadata de usuario.
+- `database/20261020_enable_rls_security_fix.sql`: Migración de seguridad que activa RLS en todas las tablas públicas expuestas y protege columnas sensibles (password).
 
 ## 2. Subagentes y Funciones Clave
 - **Subagente_Usuarios_Roles**:

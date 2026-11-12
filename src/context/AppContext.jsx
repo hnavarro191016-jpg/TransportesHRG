@@ -483,7 +483,7 @@ export const AppProvider = ({ children }) => {
           expirationDate: ca.expiration_date,
           finalScore: ca.score
         })) : [],
-        recruitmentVacancies: recruitmentVacancies && recruitmentVacancies.length > 0 ? recruitmentVacancies.map(v => ({
+        recruitmentVacancies: recruitmentVacancies ? recruitmentVacancies.map(v => ({
           id: v.id,
           title: v.title,
           department: v.department,
@@ -493,8 +493,8 @@ export const AppProvider = ({ children }) => {
           scheduleShift: v.schedule_shift,
           slots: Number(v.slots) || 1,
           status: v.status
-        })) : prev.recruitmentVacancies || INITIAL_DATA.recruitmentVacancies,
-        recruitmentCandidates: recruitmentCandidates && recruitmentCandidates.length > 0 ? recruitmentCandidates.map(c => ({
+        })) : (prev.recruitmentVacancies || INITIAL_DATA.recruitmentVacancies),
+        recruitmentCandidates: recruitmentCandidates ? recruitmentCandidates.map(c => ({
           id: c.id,
           folio: c.folio,
           vacancyId: c.vacancy_id,
@@ -532,8 +532,8 @@ export const AppProvider = ({ children }) => {
           nextActionDate: c.next_action_date,
           lastActivityAt: c.last_activity_at,
           createdAt: c.created_at
-        })) : prev.recruitmentCandidates || INITIAL_DATA.recruitmentCandidates,
-        recruitmentFollowups: recruitmentFollowups && recruitmentFollowups.length > 0 ? recruitmentFollowups.map(f => ({
+        })) : (prev.recruitmentCandidates || []),
+        recruitmentFollowups: recruitmentFollowups ? recruitmentFollowups.map(f => ({
           id: f.id,
           candidateId: f.candidate_id,
           followupDate: f.followup_date,
@@ -544,8 +544,8 @@ export const AppProvider = ({ children }) => {
           nextActionDueDate: f.next_action_due_date,
           createdBy: f.created_by,
           createdAt: f.created_at
-        })) : prev.recruitmentFollowups || INITIAL_DATA.recruitmentFollowups,
-        recruitmentHistory: recruitmentHistory && recruitmentHistory.length > 0 ? recruitmentHistory.map(h => ({
+        })) : (prev.recruitmentFollowups || []),
+        recruitmentHistory: recruitmentHistory ? recruitmentHistory.map(h => ({
           id: h.id,
           candidateId: h.candidate_id,
           actionType: h.action_type,
@@ -557,8 +557,8 @@ export const AppProvider = ({ children }) => {
           internalOnly: Boolean(h.internal_only),
           metadata: h.metadata || {},
           createdAt: h.created_at
-        })) : prev.recruitmentHistory || INITIAL_DATA.recruitmentHistory,
-        recruitmentNotifications: recruitmentNotifications && recruitmentNotifications.length > 0 ? recruitmentNotifications.map(n => ({
+        })) : (prev.recruitmentHistory || []),
+        recruitmentNotifications: recruitmentNotifications ? recruitmentNotifications.map(n => ({
           id: n.id,
           targetRole: n.target_role,
           candidateId: n.candidate_id,
@@ -567,7 +567,7 @@ export const AppProvider = ({ children }) => {
           message: n.message,
           read: Boolean(n.read),
           createdAt: n.created_at
-        })) : prev.recruitmentNotifications || INITIAL_DATA.recruitmentNotifications
+        })) : (prev.recruitmentNotifications || [])
       }));
       addToast('Datos sincronizados con Supabase', 'info');
     } catch (err) {

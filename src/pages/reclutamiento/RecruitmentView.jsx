@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { RecruitmentDashboardView } from './RecruitmentDashboardView';
 import { CandidatesListView } from './CandidatesListView';
@@ -8,12 +8,31 @@ import { VacanciesView } from './VacanciesView';
 import { CandidateFormModal } from './CandidateFormModal';
 
 export const RecruitmentView = ({ currentSubView = 'dashboard', setCurrentSubView = null, openModalExternal = false, setOpenModalExternal = null }) => {
-  const { data } = useApp();
+  const { data, fetchFromSupabase, setData } = useApp();
 
   const [internalView, setInternalView] = useState('dashboard');
   const [selectedCandidateId, setSelectedCandidateId] = useState(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [candidateToEdit, setCandidateToEdit] = useState(null);
+
+  // Sincronizar con Supabase al abrir el módulo
+  useEffect(() => {
+    if (fetchFromSupabase) fetchFromSupabase();
+  }, []);
+
+  // Purgar inmediatamente cualquier candidato demo residual
+  useEffect(() => {
+    if (data?.recruitmentCandidates && data.recruitmentCandidates.some(c => c.id === 'cand-001' || c.id === 'cand-002')) {
+      setData(prev => ({
+        ...prev,
+        recruitmentCandidates: [],
+        recruitmentFollowups: [],
+        recruitmentHistory: [],
+        recruitmentNotifications: [],
+        recruitmentVacancies: (prev.recruitmentVacancies || []).filter(v => v.id === 'vac-guardia-01' || v.title === 'Guardia de Seguridad')
+      }));
+    }
+  }, [data?.recruitmentCandidates]);
 
   const activeView = currentSubView || internalView;
   const setView = setCurrentSubView || setInternalView;

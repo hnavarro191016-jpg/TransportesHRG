@@ -2,11 +2,11 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Users, CheckSquare, Calendar, Briefcase, UserPlus, 
-  Clock, AlertCircle, CheckCircle, Bell, ArrowRight, Eye, ChevronRight 
+  Clock, AlertCircle, CheckCircle, Bell, ArrowRight, Eye, ChevronRight, RefreshCw 
 } from 'lucide-react';
 
 export const RecruitmentDashboardView = ({ setCurrentView, setSelectedCandidateId, openNewCandidateModal }) => {
-  const { data, activeRole, markNotificationAsRead } = useApp();
+  const { data, activeRole, markNotificationAsRead, fetchFromSupabase, addToast } = useApp();
 
   const candidates = data.recruitmentCandidates || [];
   const vacancies = data.recruitmentVacancies || [];
@@ -65,7 +65,29 @@ export const RecruitmentDashboardView = ({ setCurrentView, setSelectedCandidateI
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <button
+            onClick={() => {
+              if (fetchFromSupabase) fetchFromSupabase();
+              addToast('Sincronizando con base de datos...', 'info');
+            }}
+            className="btn btn-outline"
+            style={{
+              borderColor: 'rgba(255,255,255,0.7)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '9px 14px',
+              borderRadius: '8px'
+            }}
+            title="Sincronizar directamente con Supabase"
+          >
+            <RefreshCw size={16} /> Sincronizar
+          </button>
+
           <button
             onClick={openNewCandidateModal}
             className="btn"
@@ -368,55 +390,63 @@ export const RecruitmentDashboardView = ({ setCurrentView, setSelectedCandidateI
               </tr>
             </thead>
             <tbody>
-              {candidates.slice(0, 5).map(cand => {
-                const badge = getStatusBadge(cand.status);
-                return (
-                  <tr 
-                    key={cand.id} 
-                    onClick={() => {
-                      setSelectedCandidateId(cand.id);
-                      setCurrentView('expediente');
-                    }}
-                    style={{ borderBottom: '1px solid var(--color-border-subtle)', cursor: 'pointer' }}
-                  >
-                    <td style={{ padding: '12px 14px' }}>
-                      <strong style={{ color: 'var(--color-text-main)' }}>{cand.fullName}</strong>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cand.folio} • {cand.phone}</div>
-                    </td>
-                    <td style={{ padding: '12px 14px', color: '#0284c7', fontWeight: 600 }}>
-                      {cand.vacancyTitle}
-                    </td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{
-                        padding: '3px 8px',
-                        borderRadius: '10px',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        background: badge.bg,
-                        color: badge.color
-                      }}>
-                        {cand.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 14px', color: 'var(--color-text-muted)' }}>
-                      {new Date(cand.lastActivityAt || cand.createdAt).toLocaleString('es-MX')}
-                    </td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedCandidateId(cand.id);
-                          setCurrentView('expediente');
-                        }}
-                        className="btn btn-outline"
-                        style={{ fontSize: '0.75rem', padding: '3px 8px' }}
-                      >
-                        Ver Expediente
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {candidates.length > 0 ? (
+                candidates.slice(0, 5).map(cand => {
+                  const badge = getStatusBadge(cand.status);
+                  return (
+                    <tr 
+                      key={cand.id} 
+                      onClick={() => {
+                        setSelectedCandidateId(cand.id);
+                        setCurrentView('expediente');
+                      }}
+                      style={{ borderBottom: '1px solid var(--color-border-subtle)', cursor: 'pointer' }}
+                    >
+                      <td style={{ padding: '12px 14px' }}>
+                        <strong style={{ color: 'var(--color-text-main)' }}>{cand.fullName}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cand.folio} • {cand.phone}</div>
+                      </td>
+                      <td style={{ padding: '12px 14px', color: '#0284c7', fontWeight: 600 }}>
+                        {cand.vacancyTitle}
+                      </td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          background: badge.bg,
+                          color: badge.color
+                        }}>
+                          {cand.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 14px', color: 'var(--color-text-muted)' }}>
+                        {new Date(cand.lastActivityAt || cand.createdAt).toLocaleString('es-MX')}
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCandidateId(cand.id);
+                            setCurrentView('expediente');
+                          }}
+                          className="btn btn-outline"
+                          style={{ fontSize: '0.75rem', padding: '3px 8px' }}
+                        >
+                          Ver Expediente
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    No hay candidatos registrados actualmente. El módulo está listo para capturar aspirantes con el botón <strong>"Registrar Candidato"</strong>.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

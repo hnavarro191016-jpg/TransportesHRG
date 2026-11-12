@@ -8,17 +8,15 @@ const AppContext = createContext(null);
 export const AppProvider = ({ children }) => {
   const [data, setData] = useState(() => {
     try {
-      const saved = localStorage.getItem('romo_inventory_data_v2');
+      localStorage.removeItem('romo_inventory_data_v2'); // Purgar versión anterior con datos de prueba
+      const saved = localStorage.getItem('romo_inventory_data_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Purgar inmediatamente datos de prueba de candidatos y notificaciones cacheados
-        if (parsed.recruitmentCandidates && parsed.recruitmentCandidates.some(c => c.id === 'cand-001' || c.id === 'cand-002')) {
-          parsed.recruitmentCandidates = [];
-          parsed.recruitmentFollowups = [];
-          parsed.recruitmentHistory = [];
-          parsed.recruitmentNotifications = [];
-        }
-        if (parsed.recruitmentVacancies && parsed.recruitmentVacancies.some(v => v.id === 'vac-taller-02' || v.id === 'vac-operador-05')) {
+        parsed.recruitmentCandidates = parsed.recruitmentCandidates || [];
+        parsed.recruitmentFollowups = parsed.recruitmentFollowups || [];
+        parsed.recruitmentHistory = parsed.recruitmentHistory || [];
+        parsed.recruitmentNotifications = parsed.recruitmentNotifications || [];
+        if (!parsed.recruitmentVacancies || parsed.recruitmentVacancies.length === 0) {
           parsed.recruitmentVacancies = INITIAL_DATA.recruitmentVacancies;
         }
         return parsed;
@@ -266,7 +264,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem('romo_inventory_data_v2', JSON.stringify(data));
+      localStorage.setItem('romo_inventory_data_v3', JSON.stringify(data));
       localStorage.setItem('romo_theme', theme);
     } catch (e) {
       console.error('Failed saving to localStorage', e);

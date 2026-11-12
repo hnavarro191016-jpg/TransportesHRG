@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Package, Users, Wrench, GraduationCap, Lock, MessageSquare, Settings, MapPin, Fingerprint } from 'lucide-react';
+import { Package, Users, Wrench, GraduationCap, Lock, MessageSquare, Settings, MapPin, Fingerprint, UserCheck } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 export const ModuleHubView = ({ setActiveModule }) => {
@@ -56,6 +56,14 @@ export const ModuleHubView = ({ setActiveModule }) => {
       icon: <Users size={48} />,
       color: '#2563eb', // Blue
       allowedRoles: ['Administrador']
+    },
+    {
+      id: 'reclutamiento',
+      title: 'Reclutamiento de Personal',
+      description: 'Candidatos, vacantes, seguimiento y decisiones de contratación',
+      icon: <UserCheck size={48} />,
+      color: '#0284c7', // Sky Blue
+      allowedRoles: ['Administrador', 'Reclutador', 'Gerencia']
     },
     {
       id: 'mantenimientos',

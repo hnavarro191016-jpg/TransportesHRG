@@ -27,6 +27,8 @@ import { SidebarHR } from './components/SidebarHR';
 import { SidebarCapacitaciones } from './components/SidebarCapacitaciones';
 import { SidebarAdmin } from './components/SidebarAdmin';
 import { SidebarMantenimiento } from './components/SidebarMantenimiento';
+import { SidebarReclutamiento } from './components/SidebarReclutamiento';
+import { RecruitmentView } from './pages/reclutamiento/RecruitmentView';
 
 import { DashboardHRView } from './pages/hr/DashboardHRView';
 import { EmployeesView } from './pages/hr/EmployeesView';
@@ -77,6 +79,8 @@ const MainLayout = () => {
       setCurrentView('usuarios');
     } else if (activeModule === 'mantenimientos') {
       setCurrentView('dashboard');
+    } else if (activeModule === 'reclutamiento') {
+      setCurrentView('dashboard');
     } else {
       setCurrentView('dashboard');
     }
@@ -98,6 +102,15 @@ const MainLayout = () => {
         default:
           return <div style={{padding: '20px'}}><h3>Modulo en construccion</h3></div>;
       }
+    }
+
+    if (activeModule === 'reclutamiento') {
+      return (
+        <RecruitmentView 
+          currentSubView={currentView} 
+          setCurrentSubView={setCurrentView} 
+        />
+      );
     }
 
     if (activeModule === 'administracion') {
@@ -257,6 +270,12 @@ const MainLayout = () => {
           <div className={`sidebar-mobile-wrapper ${isSidebarOpen ? 'open' : ''}`}>
             {activeModule === 'recursos_humanos' ? (
               <SidebarHR currentView={currentView} setCurrentView={setCurrentView} setIsSidebarOpen={setIsSidebarOpen} />
+            ) : activeModule === 'reclutamiento' ? (
+              <SidebarReclutamiento 
+                currentView={currentView} 
+                setCurrentView={setCurrentView} 
+                setIsSidebarOpen={setIsSidebarOpen} 
+              />
             ) : activeModule === 'capacitaciones' ? (
               <SidebarCapacitaciones currentView={currentView} setCurrentView={setCurrentView} setIsSidebarOpen={setIsSidebarOpen} />
             ) : activeModule === 'mantenimientos' ? (

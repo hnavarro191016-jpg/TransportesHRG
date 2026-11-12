@@ -272,6 +272,30 @@ export const AppProvider = ({ children }) => {
   const fetchFromSupabase = async () => {
     if (!supabase) return;
     try {
+      const results = await Promise.all([
+        supabase.from('romo_products').select('*'),
+        supabase.from('romo_categories').select('*'),
+        supabase.from('romo_brands').select('*'),
+        supabase.from('romo_warehouses').select('*'),
+        supabase.from('romo_suppliers').select('*'),
+        supabase.from('romo_units').select('*'),
+        supabase.from('romo_purchases').select('*'),
+        supabase.from('romo_exits').select('*'),
+        supabase.from('romo_work_orders').select('*'),
+        supabase.from('romo_transfers').select('*'),
+        supabase.from('romo_physical_adjustments').select('*'),
+        supabase.from('romo_kardex').select('*'),
+        supabase.from('romo_users').select('*'),
+        supabase.from('romo_employees').select('*'),
+        supabase.from('romo_courses').select('*'),
+        supabase.from('romo_course_assignments').select('*'),
+        supabase.from('romo_recruitment_vacancies').select('*'),
+        supabase.from('romo_recruitment_candidates').select('*'),
+        supabase.from('romo_recruitment_followups').select('*'),
+        supabase.from('romo_recruitment_history').select('*'),
+        supabase.from('romo_recruitment_notifications').select('*')
+      ]);
+
       const [
         { data: products },
         { data: categories },
@@ -288,25 +312,13 @@ export const AppProvider = ({ children }) => {
         { data: users },
         { data: employees },
         { data: courses },
-        { data: courseAssignments }
-      ] = await Promise.all([
-        supabase.from('romo_products').select('*'),
-        supabase.from('romo_categories').select('*'),
-        supabase.from('romo_brands').select('*'),
-        supabase.from('romo_warehouses').select('*'),
-        supabase.from('romo_suppliers').select('*'),
-        supabase.from('romo_units').select('*'),
-        supabase.from('romo_purchases').select('*'),
-        supabase.from('romo_exits').select('*'),
-        supabase.from('romo_work_orders').select('*'),
-        supabase.from('romo_transfers').select('*'),
-        supabase.from('romo_physical_adjustments').select('*'),
-        supabase.from('romo_kardex').select('*'),
-        supabase.from('romo_users').select('*'),
-        supabase.from('romo_employees').select('*'),
-        supabase.from('romo_courses').select('*'),
-        supabase.from('romo_course_assignments').select('*')
-      ]);
+        { data: courseAssignments },
+        { data: recruitmentVacancies },
+        { data: recruitmentCandidates },
+        { data: recruitmentFollowups },
+        { data: recruitmentHistory },
+        { data: recruitmentNotifications }
+      ] = results;
 
       setData((prev) => ({
         ...prev,
@@ -470,7 +482,92 @@ export const AppProvider = ({ children }) => {
           completionDate: ca.completion_date,
           expirationDate: ca.expiration_date,
           finalScore: ca.score
-        })) : []
+        })) : [],
+        recruitmentVacancies: recruitmentVacancies && recruitmentVacancies.length > 0 ? recruitmentVacancies.map(v => ({
+          id: v.id,
+          title: v.title,
+          department: v.department,
+          location: v.location,
+          description: v.description,
+          requirements: v.requirements,
+          scheduleShift: v.schedule_shift,
+          slots: Number(v.slots) || 1,
+          status: v.status
+        })) : prev.recruitmentVacancies || INITIAL_DATA.recruitmentVacancies,
+        recruitmentCandidates: recruitmentCandidates && recruitmentCandidates.length > 0 ? recruitmentCandidates.map(c => ({
+          id: c.id,
+          folio: c.folio,
+          vacancyId: c.vacancy_id,
+          vacancyTitle: c.vacancy_title,
+          fullName: c.full_name,
+          phone: c.phone,
+          whatsapp: c.whatsapp,
+          email: c.email,
+          city: c.city,
+          municipality: c.municipality,
+          neighborhood: c.neighborhood,
+          source: c.source,
+          sourceDetails: c.source_details,
+          secondaryVacancies: c.secondary_vacancies || [],
+          entryAvailability: c.entry_availability,
+          scheduleAvailability: c.schedule_availability,
+          salaryExpectation: Number(c.salary_expectation) || 0,
+          salaryPeriod: c.salary_period,
+          transportMode: c.transport_mode,
+          education: c.education,
+          yearsExperience: Number(c.years_experience) || 0,
+          employmentHistory: c.employment_history || [],
+          skillsCertifications: c.skills_certifications,
+          recruiterNotes: c.recruiter_notes,
+          specificFields: c.specific_fields || {},
+          consentShareProfile: Boolean(c.consent_share_profile),
+          consentDate: c.consent_date,
+          resumeUrl: c.resume_url,
+          status: c.status,
+          discardReason: c.discard_reason,
+          hireNotes: c.hire_notes,
+          assignedRecruiter: c.assigned_recruiter,
+          companyReviewer: c.company_reviewer,
+          nextAction: c.next_action,
+          nextActionDate: c.next_action_date,
+          lastActivityAt: c.last_activity_at,
+          createdAt: c.created_at
+        })) : prev.recruitmentCandidates || INITIAL_DATA.recruitmentCandidates,
+        recruitmentFollowups: recruitmentFollowups && recruitmentFollowups.length > 0 ? recruitmentFollowups.map(f => ({
+          id: f.id,
+          candidateId: f.candidate_id,
+          followupDate: f.followup_date,
+          contactMedium: f.contact_medium,
+          contactResult: f.contact_result,
+          comments: f.comments,
+          nextAction: f.next_action,
+          nextActionDueDate: f.next_action_due_date,
+          createdBy: f.created_by,
+          createdAt: f.created_at
+        })) : prev.recruitmentFollowups || INITIAL_DATA.recruitmentFollowups,
+        recruitmentHistory: recruitmentHistory && recruitmentHistory.length > 0 ? recruitmentHistory.map(h => ({
+          id: h.id,
+          candidateId: h.candidate_id,
+          actionType: h.action_type,
+          previousStatus: h.previous_status,
+          newStatus: h.new_status,
+          actorName: h.actor_name,
+          actorRole: h.actor_role,
+          notes: h.notes,
+          internalOnly: Boolean(h.internal_only),
+          metadata: h.metadata || {},
+          createdAt: h.created_at
+        })) : prev.recruitmentHistory || INITIAL_DATA.recruitmentHistory,
+        recruitmentNotifications: recruitmentNotifications && recruitmentNotifications.length > 0 ? recruitmentNotifications.map(n => ({
+          id: n.id,
+          targetRole: n.target_role,
+          candidateId: n.candidate_id,
+          candidateName: n.candidate_name,
+          title: n.title,
+          message: n.message,
+          read: Boolean(n.read),
+          createdAt: n.created_at
+        })) : prev.recruitmentNotifications || INITIAL_DATA.recruitmentNotifications
       }));
       addToast('Datos sincronizados con Supabase', 'info');
     } catch (err) {
@@ -1062,6 +1159,524 @@ export const AppProvider = ({ children }) => {
     return true;
   };
 
+  /* ------------------- RECLUTAMIENTO DE PERSONAL ------------------- */
+  const checkCandidateDuplicate = (phone, email, excludeId = null) => {
+    const cleanPhone = (phone || '').replace(/\D/g, '');
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const candidates = data.recruitmentCandidates || [];
+
+    for (const cand of candidates) {
+      if (excludeId && cand.id === excludeId) continue;
+      const candCleanPhone = (cand.phone || '').replace(/\D/g, '');
+      const candCleanEmail = (cand.email || '').trim().toLowerCase();
+
+      if (cleanPhone && cleanPhone.length >= 7 && candCleanPhone && cleanPhone === candCleanPhone) {
+        return { isDuplicate: true, matchedField: 'teléfono', existingCandidate: cand };
+      }
+      if (cleanEmail && candCleanEmail && cleanEmail === candCleanEmail) {
+        return { isDuplicate: true, matchedField: 'correo electrónico', existingCandidate: cand };
+      }
+    }
+    return { isDuplicate: false, matchedField: null, existingCandidate: null };
+  };
+
+  const addRecruitmentCandidate = async (candidateInput) => {
+    const list = data.recruitmentCandidates || [];
+    const folio = generateFolio('CAND', list);
+    const newId = `cand-${Date.now()}`;
+    const nowIso = new Date().toISOString();
+
+    const newCandidate = {
+      ...candidateInput,
+      id: newId,
+      folio: candidateInput.folio || folio,
+      createdAt: nowIso,
+      lastActivityAt: nowIso,
+      status: candidateInput.status || 'Borrador'
+    };
+
+    const initialHistory = {
+      id: `hist-${Date.now()}`,
+      candidateId: newId,
+      actionType: 'candidate_registered',
+      previousStatus: null,
+      newStatus: newCandidate.status,
+      actorName: activeUser?.name || 'Reclutador Romo',
+      actorRole: activeRole === 'Administrador' ? 'Empresa' : (activeRole || 'Reclutador'),
+      notes: 'Registro inicial de datos de contacto y perfil de candidato',
+      internalOnly: false,
+      metadata: {},
+      createdAt: nowIso
+    };
+
+    let notificationToAdd = null;
+    if (newCandidate.status === 'Pendiente de revisión') {
+      notificationToAdd = {
+        id: `notif-${Date.now()}`,
+        targetRole: 'Empresa',
+        candidateId: newId,
+        candidateName: newCandidate.fullName,
+        title: 'Nuevo candidato enviado a revisión',
+        message: `${newCandidate.fullName} fue postulado para la vacante ${newCandidate.vacancyTitle}.`,
+        read: false,
+        createdAt: nowIso
+      };
+    }
+
+    if (supabase) {
+      try {
+        await supabase.from('romo_recruitment_candidates').insert([{
+          id: newCandidate.id,
+          folio: newCandidate.folio,
+          vacancy_id: newCandidate.vacancyId,
+          vacancy_title: newCandidate.vacancyTitle,
+          full_name: newCandidate.fullName,
+          phone: newCandidate.phone,
+          whatsapp: newCandidate.whatsapp,
+          email: newCandidate.email,
+          city: newCandidate.city,
+          municipality: newCandidate.municipality,
+          neighborhood: newCandidate.neighborhood,
+          source: newCandidate.source,
+          source_details: newCandidate.sourceDetails,
+          secondary_vacancies: newCandidate.secondaryVacancies,
+          entry_availability: newCandidate.entryAvailability,
+          schedule_availability: newCandidate.scheduleAvailability,
+          salary_expectation: newCandidate.salaryExpectation,
+          salary_period: newCandidate.salaryPeriod,
+          transport_mode: newCandidate.transportMode,
+          education: newCandidate.education,
+          years_experience: newCandidate.yearsExperience,
+          employment_history: newCandidate.employmentHistory,
+          skills_certifications: newCandidate.skillsCertifications,
+          recruiter_notes: newCandidate.recruiterNotes,
+          specific_fields: newCandidate.specificFields,
+          consent_share_profile: newCandidate.consentShareProfile,
+          consent_date: newCandidate.consentDate,
+          resume_url: newCandidate.resumeUrl,
+          status: newCandidate.status,
+          assigned_recruiter: newCandidate.assignedRecruiter || activeUser?.name,
+          next_action: newCandidate.nextAction,
+          next_action_date: newCandidate.nextActionDate,
+          last_activity_at: nowIso,
+          created_at: nowIso
+        }]);
+
+        await supabase.from('romo_recruitment_history').insert([{
+          id: initialHistory.id,
+          candidate_id: newId,
+          action_type: initialHistory.actionType,
+          previous_status: initialHistory.previousStatus,
+          new_status: initialHistory.newStatus,
+          actor_name: initialHistory.actorName,
+          actor_role: initialHistory.actorRole,
+          notes: initialHistory.notes,
+          internal_only: initialHistory.internalOnly,
+          created_at: nowIso
+        }]);
+
+        if (notificationToAdd) {
+          await supabase.from('romo_recruitment_notifications').insert([{
+            id: notificationToAdd.id,
+            target_role: notificationToAdd.targetRole,
+            candidate_id: notificationToAdd.candidateId,
+            candidate_name: notificationToAdd.candidateName,
+            title: notificationToAdd.title,
+            message: notificationToAdd.message,
+            read: false,
+            created_at: nowIso
+          }]);
+        }
+      } catch (err) {
+        console.warn('Error saving candidate to Supabase, fallback local:', err);
+      }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      recruitmentCandidates: [newCandidate, ...(prev.recruitmentCandidates || [])],
+      recruitmentHistory: [initialHistory, ...(prev.recruitmentHistory || [])],
+      recruitmentNotifications: notificationToAdd 
+        ? [notificationToAdd, ...(prev.recruitmentNotifications || [])]
+        : (prev.recruitmentNotifications || [])
+    }));
+
+    addToast(`Candidato ${newCandidate.fullName} registrado (${newCandidate.folio})`);
+    return newCandidate;
+  };
+
+  const updateRecruitmentCandidate = async (candidateId, updates) => {
+    const nowIso = new Date().toISOString();
+    const fullUpdates = { ...updates, lastActivityAt: nowIso };
+
+    if (supabase) {
+      try {
+        const payload = {};
+        if (updates.fullName !== undefined) payload.full_name = updates.fullName;
+        if (updates.phone !== undefined) payload.phone = updates.phone;
+        if (updates.whatsapp !== undefined) payload.whatsapp = updates.whatsapp;
+        if (updates.email !== undefined) payload.email = updates.email;
+        if (updates.city !== undefined) payload.city = updates.city;
+        if (updates.municipality !== undefined) payload.municipality = updates.municipality;
+        if (updates.neighborhood !== undefined) payload.neighborhood = updates.neighborhood;
+        if (updates.vacancyId !== undefined) payload.vacancy_id = updates.vacancyId;
+        if (updates.vacancyTitle !== undefined) payload.vacancy_title = updates.vacancyTitle;
+        if (updates.source !== undefined) payload.source = updates.source;
+        if (updates.sourceDetails !== undefined) payload.source_details = updates.sourceDetails;
+        if (updates.secondaryVacancies !== undefined) payload.secondary_vacancies = updates.secondaryVacancies;
+        if (updates.entryAvailability !== undefined) payload.entry_availability = updates.entryAvailability;
+        if (updates.scheduleAvailability !== undefined) payload.schedule_availability = updates.scheduleAvailability;
+        if (updates.salaryExpectation !== undefined) payload.salary_expectation = updates.salaryExpectation;
+        if (updates.salaryPeriod !== undefined) payload.salary_period = updates.salaryPeriod;
+        if (updates.transportMode !== undefined) payload.transport_mode = updates.transportMode;
+        if (updates.education !== undefined) payload.education = updates.education;
+        if (updates.yearsExperience !== undefined) payload.years_experience = updates.yearsExperience;
+        if (updates.employmentHistory !== undefined) payload.employment_history = updates.employmentHistory;
+        if (updates.skillsCertifications !== undefined) payload.skills_certifications = updates.skillsCertifications;
+        if (updates.recruiterNotes !== undefined) payload.recruiter_notes = updates.recruiterNotes;
+        if (updates.specificFields !== undefined) payload.specific_fields = updates.specificFields;
+        if (updates.resumeUrl !== undefined) payload.resume_url = updates.resumeUrl;
+        if (updates.status !== undefined) payload.status = updates.status;
+        if (updates.discardReason !== undefined) payload.discard_reason = updates.discardReason;
+        if (updates.hireNotes !== undefined) payload.hire_notes = updates.hireNotes;
+        if (updates.companyReviewer !== undefined) payload.company_reviewer = updates.companyReviewer;
+        if (updates.assignedRecruiter !== undefined) payload.assigned_recruiter = updates.assignedRecruiter;
+        if (updates.nextAction !== undefined) payload.next_action = updates.nextAction;
+        if (updates.nextActionDate !== undefined) payload.next_action_date = updates.nextActionDate;
+        payload.last_activity_at = nowIso;
+
+        await supabase.from('romo_recruitment_candidates').update(payload).eq('id', candidateId);
+      } catch (err) {
+        console.warn('Error updating candidate in Supabase:', err);
+      }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      recruitmentCandidates: (prev.recruitmentCandidates || []).map((c) =>
+        c.id === candidateId ? { ...c, ...fullUpdates } : c
+      )
+    }));
+    addToast('Datos del candidato actualizados');
+    return true;
+  };
+
+  const changeCandidateStatus = async ({
+    candidateId,
+    newStatus,
+    notes = '',
+    actorName,
+    actorRole,
+    isInternal = false,
+    metadata = {},
+    discardReason = '',
+    hireNotes = '',
+    nextAction = '',
+    nextActionDate = null
+  }) => {
+    const cand = (data.recruitmentCandidates || []).find((c) => c.id === candidateId);
+    if (!cand) return false;
+
+    const previousStatus = cand.status;
+    const nowIso = new Date().toISOString();
+    const effectiveActorName = actorName || activeUser?.name || 'Usuario';
+    const effectiveActorRole = actorRole || (activeRole === 'Administrador' ? 'Empresa' : (activeRole || 'Reclutador'));
+
+    const historyEntry = {
+      id: `hist-${Date.now()}`,
+      candidateId,
+      actionType: `status_change_to_${newStatus.toLowerCase().replace(/\s+/g, '_')}`,
+      previousStatus,
+      newStatus,
+      actorName: effectiveActorName,
+      actorRole: effectiveActorRole,
+      notes,
+      internalOnly: isInternal,
+      metadata,
+      createdAt: nowIso
+    };
+
+    let notificationToAdd = null;
+    if (newStatus === 'Pendiente de revisión') {
+      notificationToAdd = {
+        id: `notif-${Date.now()}`,
+        targetRole: 'Empresa',
+        candidateId,
+        candidateName: cand.fullName,
+        title: 'Candidato enviado a revisión',
+        message: `${effectiveActorName} envió el expediente de ${cand.fullName} (${cand.vacancyTitle}) para evaluación de la Empresa.`,
+        read: false,
+        createdAt: nowIso
+      };
+    } else if (
+      newStatus === 'Información adicional solicitada' ||
+      newStatus === 'Seguimiento solicitado' ||
+      newStatus === 'Entrevista solicitada'
+    ) {
+      notificationToAdd = {
+        id: `notif-${Date.now()}`,
+        targetRole: 'Reclutador',
+        candidateId,
+        candidateName: cand.fullName,
+        title: `La Empresa solicita: ${newStatus}`,
+        message: `${effectiveActorName} indicó: "${notes || 'Revisar requerimiento en el expediente.'}" para ${cand.fullName}.`,
+        read: false,
+        createdAt: nowIso
+      };
+    }
+
+    const candidateUpdates = {
+      status: newStatus,
+      lastActivityAt: nowIso,
+      ...(discardReason ? { discardReason } : {}),
+      ...(hireNotes ? { hireNotes } : {}),
+      ...(nextAction ? { nextAction } : {}),
+      ...(nextActionDate ? { nextActionDate } : {}),
+      ...(effectiveActorRole === 'Empresa' ? { companyReviewer: effectiveActorName } : {})
+    };
+
+    if (supabase) {
+      try {
+        await supabase.from('romo_recruitment_candidates').update({
+          status: newStatus,
+          last_activity_at: nowIso,
+          ...(discardReason ? { discard_reason: discardReason } : {}),
+          ...(hireNotes ? { hire_notes: hireNotes } : {}),
+          ...(nextAction ? { next_action: nextAction } : {}),
+          ...(nextActionDate ? { next_action_date: nextActionDate } : {}),
+          ...(effectiveActorRole === 'Empresa' ? { company_reviewer: effectiveActorName } : {})
+        }).eq('id', candidateId);
+
+        await supabase.from('romo_recruitment_history').insert([{
+          id: historyEntry.id,
+          candidate_id: candidateId,
+          action_type: historyEntry.actionType,
+          previous_status: previousStatus,
+          new_status: newStatus,
+          actor_name: effectiveActorName,
+          actor_role: effectiveActorRole,
+          notes,
+          internal_only: isInternal,
+          metadata,
+          created_at: nowIso
+        }]);
+
+        if (notificationToAdd) {
+          await supabase.from('romo_recruitment_notifications').insert([{
+            id: notificationToAdd.id,
+            target_role: notificationToAdd.targetRole,
+            candidate_id: notificationToAdd.candidateId,
+            candidate_name: notificationToAdd.candidateName,
+            title: notificationToAdd.title,
+            message: notificationToAdd.message,
+            read: false,
+            created_at: nowIso
+          }]);
+        }
+      } catch (err) {
+        console.warn('Error saving status change to Supabase:', err);
+      }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      recruitmentCandidates: (prev.recruitmentCandidates || []).map((c) =>
+        c.id === candidateId ? { ...c, ...candidateUpdates } : c
+      ),
+      recruitmentHistory: [historyEntry, ...(prev.recruitmentHistory || [])],
+      recruitmentNotifications: notificationToAdd
+        ? [notificationToAdd, ...(prev.recruitmentNotifications || [])]
+        : (prev.recruitmentNotifications || [])
+    }));
+
+    addToast(`Estado de ${cand.fullName} actualizado a "${newStatus}"`);
+    return true;
+  };
+
+  const addCandidateFollowup = async (candidateId, followupData) => {
+    const nowIso = new Date().toISOString();
+    const newFollowup = {
+      id: `foll-${Date.now()}`,
+      candidateId,
+      followupDate: followupData.followupDate || nowIso,
+      contactMedium: followupData.contactMedium || 'llamada',
+      contactResult: followupData.contactResult,
+      comments: followupData.comments || '',
+      nextAction: followupData.nextAction || '',
+      nextActionDueDate: followupData.nextActionDueDate || null,
+      createdBy: activeUser?.name || 'Reclutador Romo',
+      createdAt: nowIso
+    };
+
+    const historyEntry = {
+      id: `hist-${Date.now()}`,
+      candidateId,
+      actionType: 'contact_followup_recorded',
+      previousStatus: null,
+      newStatus: null,
+      actorName: activeUser?.name || 'Reclutador Romo',
+      actorRole: 'Reclutador',
+      notes: `Contacto registrado (${newFollowup.contactMedium}): ${newFollowup.contactResult}. ${newFollowup.comments}`,
+      internalOnly: false,
+      metadata: { contactResult: newFollowup.contactResult, medium: newFollowup.contactMedium },
+      createdAt: nowIso
+    };
+
+    const candUpdates = {
+      lastActivityAt: nowIso,
+      ...(newFollowup.nextAction ? { nextAction: newFollowup.nextAction } : {}),
+      ...(newFollowup.nextActionDueDate ? { nextActionDate: newFollowup.nextActionDueDate } : {})
+    };
+
+    if (supabase) {
+      try {
+        await supabase.from('romo_recruitment_followups').insert([{
+          id: newFollowup.id,
+          candidate_id: candidateId,
+          followup_date: newFollowup.followupDate,
+          contact_medium: newFollowup.contactMedium,
+          contact_result: newFollowup.contactResult,
+          comments: newFollowup.comments,
+          next_action: newFollowup.nextAction,
+          next_action_due_date: newFollowup.nextActionDueDate,
+          created_by: newFollowup.createdBy,
+          created_at: nowIso
+        }]);
+
+        await supabase.from('romo_recruitment_candidates').update({
+          last_activity_at: nowIso,
+          ...(newFollowup.nextAction ? { next_action: newFollowup.nextAction } : {}),
+          ...(newFollowup.nextActionDueDate ? { next_action_date: newFollowup.nextActionDueDate } : {})
+        }).eq('id', candidateId);
+
+        await supabase.from('romo_recruitment_history').insert([{
+          id: historyEntry.id,
+          candidate_id: candidateId,
+          action_type: historyEntry.actionType,
+          previous_status: null,
+          new_status: null,
+          actor_name: historyEntry.actorName,
+          actor_role: historyEntry.actorRole,
+          notes: historyEntry.notes,
+          internal_only: false,
+          created_at: nowIso
+        }]);
+      } catch (err) {
+        console.warn('Error saving followup to Supabase:', err);
+      }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      recruitmentFollowups: [newFollowup, ...(prev.recruitmentFollowups || [])],
+      recruitmentHistory: [historyEntry, ...(prev.recruitmentHistory || [])],
+      recruitmentCandidates: (prev.recruitmentCandidates || []).map((c) =>
+        c.id === candidateId ? { ...c, ...candUpdates } : c
+      )
+    }));
+
+    addToast('Seguimiento registrado exitosamente');
+    return newFollowup;
+  };
+
+  const addRecruitmentVacancy = async (vacancyInput) => {
+    const newId = `vac-${Date.now()}`;
+    const newVacancy = {
+      ...vacancyInput,
+      id: newId,
+      status: vacancyInput.status || 'abierta',
+      slots: Number(vacancyInput.slots) || 1
+    };
+
+    if (supabase) {
+      try {
+        await supabase.from('romo_recruitment_vacancies').insert([{
+          id: newVacancy.id,
+          title: newVacancy.title,
+          department: newVacancy.department,
+          location: newVacancy.location || 'Base Romo - Patio Matriz',
+          description: newVacancy.description,
+          requirements: newVacancy.requirements,
+          schedule_shift: newVacancy.scheduleShift,
+          slots: newVacancy.slots,
+          status: newVacancy.status
+        }]);
+      } catch (err) {
+        console.warn('Error saving vacancy to Supabase:', err);
+      }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      recruitmentVacancies: [newVacancy, ...(prev.recruitmentVacancies || [])]
+    }));
+    addToast(`Vacante "${newVacancy.title}" creada exitosamente`);
+    return newVacancy;
+  };
+
+  const updateRecruitmentVacancy = async (vacancyId, updates) => {
+    if (supabase) {
+      try {
+        const payload = {};
+        if (updates.title !== undefined) payload.title = updates.title;
+        if (updates.department !== undefined) payload.department = updates.department;
+        if (updates.location !== undefined) payload.location = updates.location;
+        if (updates.description !== undefined) payload.description = updates.description;
+        if (updates.requirements !== undefined) payload.requirements = updates.requirements;
+        if (updates.scheduleShift !== undefined) payload.schedule_shift = updates.scheduleShift;
+        if (updates.slots !== undefined) payload.slots = Number(updates.slots);
+        if (updates.status !== undefined) payload.status = updates.status;
+
+        await supabase.from('romo_recruitment_vacancies').update(payload).eq('id', vacancyId);
+      } catch (err) {
+        console.warn('Error updating vacancy in Supabase:', err);
+      }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      recruitmentVacancies: (prev.recruitmentVacancies || []).map((v) =>
+        v.id === vacancyId ? { ...v, ...updates } : v
+      )
+    }));
+    addToast('Vacante actualizada');
+    return true;
+  };
+
+  const markNotificationAsRead = async (notifId) => {
+    if (supabase) {
+      try {
+        await supabase.from('romo_recruitment_notifications').update({ read: true }).eq('id', notifId);
+      } catch (e) {
+        console.warn('Error updating notif:', e);
+      }
+    }
+    setData((prev) => ({
+      ...prev,
+      recruitmentNotifications: (prev.recruitmentNotifications || []).map((n) =>
+        n.id === notifId ? { ...n, read: true } : n
+      )
+    }));
+  };
+
+  const markAllNotificationsAsRead = async (targetRole) => {
+    if (supabase) {
+      try {
+        await supabase.from('romo_recruitment_notifications')
+          .update({ read: true })
+          .or(`target_role.eq.${targetRole},target_role.eq.Todos`);
+      } catch (e) {
+        console.warn('Error updating all notifs:', e);
+      }
+    }
+    setData((prev) => ({
+      ...prev,
+      recruitmentNotifications: (prev.recruitmentNotifications || []).map((n) =>
+        (n.targetRole === targetRole || n.targetRole === 'Todos') ? { ...n, read: true } : n
+      )
+    }));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1100,7 +1715,17 @@ export const AppProvider = ({ children }) => {
         addWorkOrder,
         updateWorkOrderStatus,
         addTransfer,
-        addAdjustment
+        addAdjustment,
+        // RECLUTAMIENTO EXPORTS
+        checkCandidateDuplicate,
+        addRecruitmentCandidate,
+        updateRecruitmentCandidate,
+        changeCandidateStatus,
+        addCandidateFollowup,
+        addRecruitmentVacancy,
+        updateRecruitmentVacancy,
+        markNotificationAsRead,
+        markAllNotificationsAsRead
       }}
     >
       {children}

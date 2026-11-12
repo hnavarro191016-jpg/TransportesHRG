@@ -57,6 +57,7 @@ export const Header = ({ currentView, setCurrentView, searchTerm, setSearchTerm,
           <div className="header-title desktop-only">Transportes Romo</div>
           <div className="header-subtitle">
             {activeModule === 'recursos_humanos' ? 'RECURSOS HUMANOS' :
+             activeModule === 'reclutamiento' ? 'RECLUTAMIENTO DE PERSONAL' :
              activeModule === 'capacitaciones' ? 'CAPACITACIONES' :
              activeModule === 'mantenimientos' ? 'MANTENIMIENTO' :
              activeModule === 'administracion' ? 'ADMINISTRACION' :

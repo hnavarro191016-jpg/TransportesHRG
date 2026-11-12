@@ -3,8 +3,8 @@
   "project": "Transportes Romo (HRG)",
   "version": "1.0.0",
   "orchestration_protocol": "MASTER_ORCHESTRATOR_V1",
-  "agents_count": 10,
-  "subagents_count": 24,
+  "agents_count": 11,
+  "subagents_count": 28,
   "agents": [
     {
       "id": "MASTER_ORCHESTRATOR",
@@ -271,6 +271,48 @@
         {
           "name": "Subagente_Auth_Seguridad",
           "function": "Políticas de autenticación Supabase, forzado de cambio de clave inicial y control de acceso RLS"
+        }
+      ]
+    },
+    {
+      "id": "AGENTE_RECLUTAMIENTO",
+      "type": "module",
+      "name": "Agente de Reclutamiento de Personal",
+      "role": "Especialista en atracción de talento, catálogo de vacantes, expediente de aspirantes y flujo de decisiones de contratación",
+      "memory_file": ".agents/memory/MEMORY_RECLUTAMIENTO.md",
+      "managed_files": [
+        "src/pages/reclutamiento/RecruitmentView.jsx",
+        "src/pages/reclutamiento/RecruitmentDashboardView.jsx",
+        "src/pages/reclutamiento/CandidatesListView.jsx",
+        "src/pages/reclutamiento/CandidateDetailView.jsx",
+        "src/pages/reclutamiento/CandidateFormModal.jsx",
+        "src/pages/reclutamiento/MyPendingView.jsx",
+        "src/pages/reclutamiento/VacanciesView.jsx",
+        "src/components/SidebarReclutamiento.jsx",
+        "database/20261112_recruitment_module.sql"
+      ],
+      "shared_dependencies": [
+        "src/context/AppContext.jsx",
+        "src/lib/supabaseClient.js",
+        "src/App.jsx",
+        "src/pages/ModuleHubView.jsx"
+      ],
+      "subagents": [
+        {
+          "name": "Subagente_Atraccion_Candidatos",
+          "function": "Formulario estructurado, detección reactiva de duplicados, consentimiento y resguardo de datos sensibles"
+        },
+        {
+          "name": "Subagente_Perfiles_Vacantes",
+          "function": "Campos específicos adaptados a Guardias, Taller, Almacén, Monitoristas y Operadores de tráiler"
+        },
+        {
+          "name": "Subagente_Seguimiento_Reclutador",
+          "function": "Bitácora de contactos, llamadas e intentos, agenda de citas y panel de tareas vencidas"
+        },
+        {
+          "name": "Subagente_Decisiones_Empresa",
+          "function": "Acciones exclusivas de revisión: solicitar información/seguimiento, autorizar entrevista, motivo interno de descarte y aprobación de contratación"
         }
       ]
     },

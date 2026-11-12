@@ -21,10 +21,11 @@ export const UsersView = () => {
 
   const roleDescriptions = [
     { role: 'Administrador', desc: 'Acceso total a todos los módulos y configuraciones del sistema.' },
+    { role: 'Reclutador', desc: 'Captura y seguimiento de candidatos, llamadas, programación de entrevistas y enlace con la empresa.' },
     { role: 'Encargado de almacén', desc: 'Gestión de productos, entradas, salidas, transferencias, conteos físicos y reportes.' },
     { role: 'Compras', desc: 'Administración de proveedores, registro de órdenes de compra y entradas.' },
     { role: 'Mecánico', desc: 'Consulta de refacciones, catálogo de flota y apertura/cierre de órdenes de trabajo (OT).' },
-    { role: 'Gerencia', desc: 'Acceso de lectura a Dashboard de indicadores, alertas y reportes financieros.' },
+    { role: 'Gerencia', desc: 'Acceso de lectura a Dashboard de indicadores, decisiones de contratación, alertas y reportes.' },
     { role: 'Monitoreo', desc: 'Acceso exclusivo al submódulo de rastreo GPS e historial de rutas.' }
   ];
 

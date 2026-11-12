@@ -9,7 +9,21 @@ export const AppProvider = ({ children }) => {
   const [data, setData] = useState(() => {
     try {
       const saved = localStorage.getItem('romo_inventory_data_v2');
-      return saved ? JSON.parse(saved) : INITIAL_DATA;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Purgar inmediatamente datos de prueba de candidatos y notificaciones cacheados
+        if (parsed.recruitmentCandidates && parsed.recruitmentCandidates.some(c => c.id === 'cand-001' || c.id === 'cand-002')) {
+          parsed.recruitmentCandidates = [];
+          parsed.recruitmentFollowups = [];
+          parsed.recruitmentHistory = [];
+          parsed.recruitmentNotifications = [];
+        }
+        if (parsed.recruitmentVacancies && parsed.recruitmentVacancies.some(v => v.id === 'vac-taller-02' || v.id === 'vac-operador-05')) {
+          parsed.recruitmentVacancies = INITIAL_DATA.recruitmentVacancies;
+        }
+        return parsed;
+      }
+      return INITIAL_DATA;
     } catch (e) {
       console.error('Failed loading localStorage', e);
       return INITIAL_DATA;
@@ -483,7 +497,7 @@ export const AppProvider = ({ children }) => {
           expirationDate: ca.expiration_date,
           finalScore: ca.score
         })) : [],
-        recruitmentVacancies: recruitmentVacancies ? recruitmentVacancies.map(v => ({
+        recruitmentVacancies: Array.isArray(recruitmentVacancies) && recruitmentVacancies.length > 0 ? recruitmentVacancies.map(v => ({
           id: v.id,
           title: v.title,
           department: v.department,
@@ -493,8 +507,8 @@ export const AppProvider = ({ children }) => {
           scheduleShift: v.schedule_shift,
           slots: Number(v.slots) || 1,
           status: v.status
-        })) : (prev.recruitmentVacancies || INITIAL_DATA.recruitmentVacancies),
-        recruitmentCandidates: recruitmentCandidates ? recruitmentCandidates.map(c => ({
+        })) : (INITIAL_DATA.recruitmentVacancies || []),
+        recruitmentCandidates: Array.isArray(recruitmentCandidates) ? recruitmentCandidates.map(c => ({
           id: c.id,
           folio: c.folio,
           vacancyId: c.vacancy_id,
@@ -532,8 +546,8 @@ export const AppProvider = ({ children }) => {
           nextActionDate: c.next_action_date,
           lastActivityAt: c.last_activity_at,
           createdAt: c.created_at
-        })) : (prev.recruitmentCandidates || []),
-        recruitmentFollowups: recruitmentFollowups ? recruitmentFollowups.map(f => ({
+        })) : [],
+        recruitmentFollowups: Array.isArray(recruitmentFollowups) ? recruitmentFollowups.map(f => ({
           id: f.id,
           candidateId: f.candidate_id,
           followupDate: f.followup_date,
@@ -544,8 +558,8 @@ export const AppProvider = ({ children }) => {
           nextActionDueDate: f.next_action_due_date,
           createdBy: f.created_by,
           createdAt: f.created_at
-        })) : (prev.recruitmentFollowups || []),
-        recruitmentHistory: recruitmentHistory ? recruitmentHistory.map(h => ({
+        })) : [],
+        recruitmentHistory: Array.isArray(recruitmentHistory) ? recruitmentHistory.map(h => ({
           id: h.id,
           candidateId: h.candidate_id,
           actionType: h.action_type,
@@ -557,8 +571,8 @@ export const AppProvider = ({ children }) => {
           internalOnly: Boolean(h.internal_only),
           metadata: h.metadata || {},
           createdAt: h.created_at
-        })) : (prev.recruitmentHistory || []),
-        recruitmentNotifications: recruitmentNotifications ? recruitmentNotifications.map(n => ({
+        })) : [],
+        recruitmentNotifications: Array.isArray(recruitmentNotifications) ? recruitmentNotifications.map(n => ({
           id: n.id,
           targetRole: n.target_role,
           candidateId: n.candidate_id,
@@ -567,7 +581,7 @@ export const AppProvider = ({ children }) => {
           message: n.message,
           read: Boolean(n.read),
           createdAt: n.created_at
-        })) : (prev.recruitmentNotifications || [])
+        })) : []
       }));
       addToast('Datos sincronizados con Supabase', 'info');
     } catch (err) {
